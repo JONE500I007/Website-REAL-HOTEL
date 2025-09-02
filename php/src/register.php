@@ -85,7 +85,7 @@ if (isset($_SESSION["user"])) {
             </a>
             <nav class="nav-links">
                 <a href="index.php">Home</a>
-                <a href="#">Hotel</a>
+                <a href="hotel.php">Hotel</a>
                 <a href="contact.php">Contact</a>
             </nav>
             <div class="auth-links">
@@ -118,9 +118,9 @@ if (isset($_SESSION["user"])) {
                 </div>
                 <p>© 2025 PNVC, นายครรชิดพล เพ็งเอียด</p>
                 <div class="social-icons">
-                    <a href="#"><img src="image\twwokX.png" alt="Twitter_X"></a>
-                    <a href="#"><img src="image\insatagem.png" alt="Instagram"></a>
-                    <a href="#"><img src="image\fackbookicon.png" alt="Facebook"></a>
+                    <a href="https://x.com/FGgez777"><img src="image\twwokX.png" alt="Twitter_X"></a>
+                    <a href="https://www.instagram.com/face.2339/?igsh=dWh6eGtmbjVpanRt"><img src="image\insatagem.png" alt="Instagram"></a>
+                    <a href="https://www.facebook.com/face.pengeid/"><img src="image\fackbookicon.png" alt="Facebook"></a>
                 </div>
             </div>
         </div>
