@@ -204,8 +204,12 @@ $stmt->close();
                 <button type="submit">บันทึกข้อมูล</button>
             </form>
             <form method="POST" action="manage_hotels.php" onsubmit="return confirm('คุณแน่ใจหรือไม่ว่าต้องการลบโรงแรมนี้?');">
-                <input type="hidden" name="delete_hotel_id" value="<?= $row['id'] ?>">
-                <button type="submit" class="btn btn-danger">ลบ</button>
+                <?php if (!empty($hotel['id'])): ?>
+                    <input type="hidden" name="delete_hotel_id" value="<?= htmlspecialchars($hotel['id']) ?>">
+                    <button type="submit" class="btn btn-danger">ลบ</button>
+                <?php else: ?>
+                    <p style="color:gray;">ยังไม่มีโรงแรมให้ลบ</p>
+                <?php endif; ?>
             </form>
             <p><a href="index.php">กลับหน้าหลัก</a></p>
         </div>
