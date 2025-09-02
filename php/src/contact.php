@@ -1,0 +1,117 @@
+<?php
+session_start();
+require_once "database.php";
+?>
+
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ค้นหาโรงแรม</title>
+    <link rel="stylesheet" href="style2.css?v=1.3">
+    <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@400;600&display=swap" rel="stylesheet">
+</head>
+<body>
+
+    <header class="navbar">
+        <div class="container">
+            <div class="logo">
+                <img src="image\hotel-icon-coupon-codes-hotel.png" alt="Logo">
+            </div>
+            <nav class="nav-links">
+                <a href="index.php">Home</a>
+                <a href="#">Hotel</a>
+                <a href="contact.php">Contact</a>
+            </nav>
+            <div class="auth-links">
+            <?php if (!isset($_SESSION["user"])): ?>
+                <a href="register.php" class="btn-signup">สมัครสมาชิก</a>
+                <a href="login.php" class="btn-signup">เข้าสู่ระบบ</a>
+            <?php else: ?>
+                <div class="profile-menu">
+                    <div class="profile-icon" onclick="toggleMenu()">
+                        <img src="uploads/<?= $_SESSION["profile_picture"] ?? 'default.jpg' ?>" alt="Profile">
+                        <span><?= $_SESSION["user"] ?></span>
+                    </div>
+                    <div class="dropdown-menu" id="dropdownMenu">
+                        <a href="edit_profile.php">แก้ไขโปรไฟล์</a>
+                        <?php if ($_SESSION["role"] === "owner"): ?>
+                            <a href="manage_hotels.php">แก้ไขโรงแรม</a>
+                        <?php endif; ?>
+                        <a href="logout.php">ออกจากระบบ</a>
+                    </div>
+                </div>
+            <?php endif; ?>
+            </div>
+        </div>
+    </header>
+
+    <!-- Contact Section -->
+    <section class="contact-section">
+        <div class="contact-card">
+            <div class="contact-left">
+                <img src="image/mydogin.png" alt="Profile" class="profile-img">
+            </div>
+            <div class="contact-right">
+                <h2>DEVOLROPER PROFILE</h2>
+                <p><b>ชื่อ:</b> นาย ศรชิตพล เพ็งเอียด</p>
+                <p><b>ชื่อเล่น:</b> เฟส</p>
+                <p><b>อายุ:</b> 18 ปี</p>
+                <p><b>วัน/เดือน/ปี เกิด:</b> 29 พฤษภาคม พ.ศ.2549</p>
+                <p><b>สาขาวิชา:</b> เทคโนโลยีสารสนเทศ (IT)</p>
+                <p><b>สถานศึกษา:</b> วิทยาลัยอาชีวศึกษาปัตตานี ระดับชั้น ปวส. ปีที่ 1/2</p>
+
+                <h3>MY CONTACT</h3>
+                <p>📘 Facebook: <a href="#">Face Kanchidpon</a></p>
+                <p>📧 Email: <a href="mailto:khrabfes37@gmail.com">khrabfes37@gmail.com</a></p>
+                <p>📱 Phone: <a href="tel:0646419643">064-641-9643</a></p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Map Section -->
+    <section class="map-section">
+        <h3>สามารถติดต่อได้ที่วิทยาลัยอาชีวศึกษาปัตตานี</h3>
+        <!--
+        <iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3923.283048469239!2d101.25324631433644!3d6.867547695030537!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x310959d47f0f3f3f%3A0x4cb37e9df7087dd!2z4Liq4LiW4Liy4Lih4Lin4Li04LiU4LmM4LmC4LiZ4Lit4LiH4LmC4LiU4Li04LmA4LiC4Lil4LiU4LmB4Lil4LmJ4Liy4LiB4LmE4LiB4LiX4Lia4LmJ4Lit4LiU4Lir4LmJ4Lih4LiH4Liy4Lij4Liw4Lia4Lij4Li54Lih4LiL4Lij4LmM!5e0!3m2!1sth!2sth!4v1705555555555!5m2!1sth!2sth"
+            width="100%" height="350" style="border:0;" allowfullscreen="" loading="lazy"></iframe>
+        -->
+        <iframe src="https://maps.app.goo.gl/rDQ2PXY1hTeoH7UJA"
+            width="100%" height="350" style="border:0;" allowfullscreen="" loading="lazy"></iframe>
+    </section>
+    
+    <!-- just my under1 -->
+
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-logo">
+                    <img src="image\hotel-icon-coupon-codes-hotel.png" alt="Footer Logo">
+                </div>
+                <p>© 2025 PNVC, นายครรชิดพล เพ็งเอียด</p>
+                <div class="social-icons">
+                    <a href="#"><img src="image\twwokX.png" alt="Twitter_X"></a>
+                    <a href="#"><img src="image\insatagem.png" alt="Instagram"></a>
+                    <a href="#"><img src="image\fackbookicon.png" alt="Facebook"></a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+</body>
+</html>
+
+<script>
+function toggleMenu() {
+    const menu = document.getElementById("dropdownMenu");
+    menu.style.display = (menu.style.display === "block") ? "none" : "block";
+}
+document.addEventListener('click', function(event) {
+    const menu = document.getElementById("dropdownMenu");
+    const profileIcon = document.querySelector('.profile-icon');
+    if (menu && !profileIcon.contains(event.target)) {
+        menu.style.display = "none";
+    }
+});
+</script>
