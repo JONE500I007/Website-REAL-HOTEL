@@ -2,7 +2,7 @@
 session_start();
 
 if (!isset($_SESSION["user_id"])) {
-    // redirect หรือแจ้งว่าไม่ได้ login
+    // Redirect or report that you are not logged in
     header("Location: login.php");
     exit;
 }
@@ -10,7 +10,7 @@ if (!isset($_SESSION["user_id"])) {
 require_once "database.php";
 $user_email = $_SESSION["user_email"];
 
-// โหลดข้อมูลผู้ใช้จากฐานข้อมูล
+// load databases
 $sql = "SELECT * FROM users WHERE email = ?";
 $stmt = $conn->prepare($sql);
 $stmt->bind_param("s", $user_email);
@@ -46,7 +46,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
 
         $profile_image_name = $_FILES["profile_picture"]["name"];
 
-        //ตรวจสอบนามสกุลไฟล์
+        //Check file extension
         $allowed_extensions = ['jpg', 'jpeg', 'png', 'gif'];
         $ext = strtolower(pathinfo($_FILES["profile_picture"]["name"], PATHINFO_EXTENSION));
         //$ext = pathinfo($_FILES["profile_picture"]["name"], PATHINFO_EXTENSION);
@@ -55,7 +55,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
         $target_file = iconv("UTF-8", "UTF-8//IGNORE", $target_file);
 
         if (in_array($ext, $allowed_extensions)) {
-            // ตั้งชื่อไฟล์ใหม่ (กันซ้ำ + ปลอดภัย)
+            // new name file
             $new_filename = "profile_" . $user_id . "_" . time() . "." . $ext;
             $target_file = $target_dir . $new_filename;
 

@@ -7,10 +7,41 @@ if (!isset($_SESSION["user_id"])) {
     exit;
 }
 
-// ตรวจสอบสิทธิ์ (เฉพาะ owner เท่านั้นที่เข้าได้)
+// Verify permissions (only the owner can access)
 if ($_SESSION["role"] !== "owner") {
     echo "<div style='color:red; font-weight:bold;'>คุณไม่มีสิทธิ์เข้าหน้านี้</div>";
     exit;
+}
+
+if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST["delete_hotel_id"])) {
+    $delete_id = intval($_POST["delete_hotel_id"]);
+    $owner_id = $_SESSION["user_id"];
+
+    // you owner?
+    $check_sql = "SELECT * FROM hotels WHERE id = ? AND owner_id = ?";
+    $check_stmt = $conn->prepare($check_sql);
+    $check_stmt->bind_param("ii", $delete_id, $owner_id);
+    $check_stmt->execute();
+    $result = $check_stmt->get_result();
+
+    if ($result->num_rows > 0) {
+        // If it's true, delete the hotel
+        $delete_sql = "DELETE FROM hotels WHERE id = ? AND owner_id = ?";
+        $delete_stmt = $conn->prepare($delete_sql);
+        $delete_stmt->bind_param("ii", $delete_id, $owner_id);
+        $delete_stmt->execute();
+
+        // Delete images in hotel_images (optional)
+        $delete_img_sql = "DELETE FROM hotel_images WHERE hotel_id = ?";
+        $img_stmt = $conn->prepare($delete_img_sql);
+        $img_stmt->bind_param("i", $delete_id);
+        $img_stmt->execute();
+
+        echo "<script>alert('ลบโรงแรมเรียบร้อยแล้ว'); window.location.href='manage_hotels.php';</script>";
+        exit;
+    } else {
+        echo "<script>alert('ไม่พบข้อมูลโรงแรมนี้ หรือคุณไม่มีสิทธิ์ลบ');</script>";
+    }
 }
 
 if ($_SERVER["REQUEST_METHOD"] === "POST") {
@@ -21,7 +52,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
     $owner_id    = $_SESSION["user_id"];
 
     if (!empty($hotel_name) && !empty($location) && !empty($price)) {
-        // เช็คว่ามีโรงแรมนี้ในระบบรึยัง
+        // Check if this hotel is in the db
         $check_sql = "SELECT id FROM hotels WHERE owner_id = ?";
         $check_stmt = $conn->prepare($check_sql);
         $check_stmt->bind_param("i", $owner_id);
@@ -29,27 +60,27 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
         $check_result = $check_stmt->get_result();
 
         if ($check_result->num_rows > 0) {
-            // มีอยู่แล้ว: อัปเดต
+            // if have : just update
             $sql = "UPDATE hotels SET hotel_name = ?, location = ?, price = ?, description = ? WHERE owner_id = ?";
             $stmt = $conn->prepare($sql);
             $stmt->bind_param("ssssi", $hotel_name, $location, $price, $description, $owner_id);
         } else {
-            // ยังไม่มี: เพิ่มใหม่
+            // if not have: add one
             $sql = "INSERT INTO hotels (hotel_name, location, price, description, owner_id) VALUES (?, ?, ?, ?, ?)";
             $stmt = $conn->prepare($sql);
             $stmt->bind_param("ssssi", $hotel_name, $location, $price, $description, $owner_id);
         }
 
         if ($stmt->execute()) {
-            // ได้ ID โรงแรม
+            // got ID โรงแรม
             $hotel_id = ($check_result->num_rows > 0)
                 ? $check_result->fetch_assoc()["id"]
                 : $conn->insert_id;
 
-            // อัปโหลดรูป
+            // uoload image
             if (isset($_FILES["hotel_images"])) {
-                $upload_dir = __DIR__ . "/uploads/hotels/"; // absolute path จริง
-                $relative_dir = "uploads/hotels/";          // path ที่จะเอาไปใช้ในเว็บ
+                $upload_dir = __DIR__ . "/uploads/hotels/"; // absolute path real
+                $relative_dir = "uploads/hotels/";          // path on web
 
                 if (!is_dir($upload_dir)) {
                     mkdir($upload_dir, 0777, true);
@@ -61,8 +92,8 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                         $ext = pathinfo($original_name, PATHINFO_EXTENSION);
                         $new_name = uniqid("hotel_") . "." . $ext;
 
-                        $destination = $upload_dir . $new_name;   // path เต็มสำหรับเก็บไฟล์
-                        $relative_path = $relative_dir . $new_name; // path ที่เก็บลง DB
+                        $destination = $upload_dir . $new_name;   // path for full file
+                        $relative_path = $relative_dir . $new_name; // path in to the DB
 
                         if (move_uploaded_file($tmp_name, $destination)) {
                             $img_sql = "INSERT INTO hotel_images (hotel_id, image_path) VALUES (?, ?)";
@@ -77,7 +108,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                 }
             }
 
-            // redirect หลังจากเสร็จทุกอย่าง
+            // redirect af all done
             header("Location: manage_hotels.php?success=1");
             exit;
         } else {
@@ -172,9 +203,9 @@ $stmt->close();
                 <input type="file" name="hotel_images[]" multiple accept="image/*">
                 <button type="submit">บันทึกข้อมูล</button>
             </form>
-            <form method="POST" onsubmit="return confirm('คุณแน่ใจหรือไม่ว่าต้องการลบโรงแรมนี้?');">
+            <form method="POST" action="manage_hotels.php" onsubmit="return confirm('คุณแน่ใจหรือไม่ว่าต้องการลบโรงแรมนี้?');">
                 <input type="hidden" name="delete_hotel_id" value="<?= $row['id'] ?>">
-                <button type="submit" class="btn btn-danger">ลบโรงแรม</button>
+                <button type="submit" class="btn btn-danger">ลบ</button>
             </form>
             <p><a href="index.php">กลับหน้าหลัก</a></p>
         </div>
