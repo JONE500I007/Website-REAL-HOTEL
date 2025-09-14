@@ -366,6 +366,79 @@ body {
     text-decoration: underline;
 }
 
+/* Wrapper */
+/* ตัวเลือกหลัก */
+.custom-select {
+    background: #5d3f8c;
+    border: 2px solid #5d3f8c;
+    border-radius: 12px;
+    color: #fff;
+    font-size: 16px;
+    padding: 12px 40px 12px 12px; /* เว้นด้านขวาไว้ให้ลูกศร */
+    cursor: pointer;
+    user-select: none;
+    position: relative;
+}
+
+/* trigger (ตัวแสดงค่าที่เลือกไว้ + ลูกศร) */
+.custom-select-trigger {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: relative;
+}
+
+.custom-select-trigger::after {
+    content: "▼";
+    font-size: 14px;
+    position: absolute;
+    right: -12px;
+    color: #fff;
+    transition: transform 0.3s ease;
+}
+
+/* เวลา open ให้ลูกศรหมุน */
+.custom-select.open .custom-select-trigger::after {
+    transform: rotate(-180deg);
+}
+
+/* dropdown list */
+.custom-options {
+    position: absolute;
+    top: calc(100% + 5px); /* ให้มีระยะห่างเล็กน้อย */
+    left: 0;
+    right: 0;
+    background: #7b59a9;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+    overflow: hidden;
+    z-index: 99;
+    display: none;
+}
+
+/* option แต่ละตัว */
+.custom-option {
+    padding: 12px;
+    cursor: pointer;
+    transition: background 0.3s;
+    display: block;
+    text-align: left;
+}
+
+.custom-option:hover {
+    background: #5d3f8c;
+}
+
+.custom-option.selected {
+    background: #4a2f6b;
+}
+
+/* เปิด dropdown */
+.custom-select.open .custom-options {
+    display: block;
+}
+
+
 .admin-link {
     font-size: 14px;
     text-align: right;

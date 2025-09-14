@@ -37,6 +37,7 @@ if (isset($_POST["login"])) {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>เข้าสู่ระบบ</title>
+    <link rel="icon" type="image/png" href="image/hotel-icon-coupon-codes-hotel.png">
     <link rel="stylesheet" href="style2.css?v=1.2">
     <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@400;600&display=swap" rel="stylesheet">
 </head>
@@ -64,7 +65,9 @@ if (isset($_POST["login"])) {
             <form action="login.php" method="post">
                 <input type="email" name="email" placeholder="อีเมล">
                 <input type="password" name="password" placeholder="รหัสผ่าน">
+                <!--
                 <p class="admin-link">สำหรับ เจ้าของโรงแรม <a href="#">คลิกที่นี่</a></p>
+                -->
                 <button type="submit" name="login">เข้าสู่ระบบ</button>
             </form>
             <p>สมัครสมาชิกแล้วหรือยัง? <a href="register.php">คลิกที่นี่เพื่อสมัครสมาชิก</a></p>

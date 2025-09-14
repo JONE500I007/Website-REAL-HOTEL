@@ -49,6 +49,9 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
     $location    = $_POST["location"] ?? '';
     $price       = $_POST["price"] ?? '';
     $description = $_POST["description"] ?? '';
+    $facilities = $_POST["facilities"] ?? '';
+    $surrounding = $_POST["surrounding"] ?? '';
+    $type = $_POST["type"] ?? '';
     $owner_id    = $_SESSION["user_id"];
 
     if (!empty($hotel_name) && !empty($location) && !empty($price)) {
@@ -61,14 +64,14 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
 
         if ($check_result->num_rows > 0) {
             // if have : just update
-            $sql = "UPDATE hotels SET hotel_name = ?, location = ?, price = ?, description = ? WHERE owner_id = ?";
+            $sql = "UPDATE hotels SET hotel_name = ?, location = ?, price = ?, description = ?, facilities = ?, surrounding = ?, type = ? WHERE owner_id = ?";
             $stmt = $conn->prepare($sql);
-            $stmt->bind_param("ssssi", $hotel_name, $location, $price, $description, $owner_id);
+            $stmt->bind_param("sssssssi", $hotel_name, $location, $price, $description, $facilities, $surrounding, $type, $owner_id);
         } else {
             // if not have: add one
-            $sql = "INSERT INTO hotels (hotel_name, location, price, description, owner_id) VALUES (?, ?, ?, ?, ?)";
+            $sql = "INSERT INTO hotels (hotel_name, location, price, description, facilities, surrounding, type, owner_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
             $stmt = $conn->prepare($sql);
-            $stmt->bind_param("ssssi", $hotel_name, $location, $price, $description, $owner_id);
+            $stmt->bind_param("sssssssi", $hotel_name, $location, $price, $description, $facilities, $surrounding, $type, $owner_id);
         }
 
         if ($stmt->execute()) {
@@ -126,7 +129,10 @@ $hotel = [
     "hotel_name" => "",
     "location" => "",
     "price" => "",
-    "description" => ""
+    "description" => "",
+    "facilities" => "",
+    "surrounding" => "",
+    "type" => ""
 ];
 
 //โหลดเฉลาะข้อมูล user คนๆ นั้น
@@ -153,8 +159,9 @@ $stmt->close();
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>เพิ่มโรงแรมใหม่</title>
-    <link rel="stylesheet" href="style2.css?v=1.2">
+    <title>เพิ่มหรือแก้ไขโรงแรมใหม่</title>
+    <link rel="icon" type="image/png" href="image/hotel-icon-coupon-codes-hotel.png">
+    <link rel="stylesheet" href="style2.css?v=1.5">
     <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@400;600&display=swap" rel="stylesheet">
 </head>
 <body>
@@ -199,6 +206,27 @@ $stmt->close();
                 <input type="text" name="location" placeholder="ที่ตั้ง" value="<?= htmlspecialchars($hotel["location"])?>">
                 <input type="text" name="price" placeholder="ราคาต่อคืน (บาท)" value="<?= htmlspecialchars($hotel["price"])?>">
                 <input type="text" name="description" placeholder="รายละเอียด" value="<?= htmlspecialchars($hotel["description"])?>">
+                <input type="text" name="facilities" placeholder="สิ่งอำนวยความสะดวก" value="<?= htmlspecialchars($hotel["facilities"])?>">
+                <input type="text" name="surrounding" placeholder="บริเวณโดยรอบ" value="<?= htmlspecialchars($hotel["surrounding"])?>">
+                <!--
+                <div class="custom-select-wrapper">
+                    <div class="custom-select" id="hotelTypeSelect">
+                        <div class="custom-select-trigger">
+                            <?= !empty($hotel["type"]) ? htmlspecialchars($hotel["type"]) : "-- เลือกประเภทโรงแรม --" ?>
+                        </div>
+                        <div class="custom-options">
+                            <span class="custom-option <?= ($hotel["type"] == "โรงแรมราคาประหยัด") ? "selected" : "" ?>" data-value="Budget">ราคาประหยัด</span>
+                            <span class="custom-option <?= ($hotel["type"] == "โรงแรมหรู") ? "selected" : "" ?>" data-value="Luxury">หรู</span>
+                            <span class="custom-option <?= ($hotel["type"] == "โรงแรมครอบครัว") ? "selected" : "" ?>" data-value="Family">ครอบครัว</span>
+                        </div>
+                        
+                    </div>
+                    -->
+                    <!-- hidden input เอาไว้ส่งค่าไป PHP -->
+                     <!--
+                    <input type="hidden" name="type" id="hotelTypeInput" value="<?= htmlspecialchars($hotel["type"]) ?>">
+                </div>
+                -->
                 <label>อัปโหลดรูปภาพโรงแรม:</label>
                 <input type="file" name="hotel_images[]" multiple accept="image/*">
                 <button type="submit">บันทึกข้อมูล</button>
@@ -245,5 +273,43 @@ document.addEventListener('click', function(event) {
     if (menu && !profileIcon.contains(event.target)) {
         menu.style.display = "none";
     }
+});
+</script>
+
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+    const customSelect = document.querySelector(".custom-select");
+    const trigger = customSelect.querySelector(".custom-select-trigger");
+    const options = customSelect.querySelectorAll(".custom-option");
+    const hiddenInput = document.getElementById("hotelTypeInput");
+
+    // toggle dropdown
+    trigger.addEventListener("click", () => {
+        customSelect.classList.toggle("open");
+    });
+
+    // เลือก option
+    options.forEach(option => {
+        option.addEventListener("click", () => {
+            // set text
+            trigger.textContent = option.textContent;
+            // set value hidden input
+            hiddenInput.value = option.dataset.value;
+
+            // clear old selection
+            options.forEach(o => o.classList.remove("selected"));
+            option.classList.add("selected");
+
+            // close dropdown
+            customSelect.classList.remove("open");
+        });
+    });
+
+    // ปิด dropdown ถ้าคลิกข้างนอก
+    document.addEventListener("click", (e) => {
+        if (!customSelect.contains(e.target)) {
+            customSelect.classList.remove("open");
+        }
+    });
 });
 </script>

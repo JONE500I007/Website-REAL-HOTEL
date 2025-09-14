@@ -8,7 +8,8 @@ require_once "database.php";
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ค้นหาโรงแรม</title>
+    <title>ติดต่อเรา</title>
+    <link rel="icon" type="image/png" href="image/hotel-icon-coupon-codes-hotel.png">
     <link rel="stylesheet" href="style2.css?v=1.3">
     <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@400;600&display=swap" rel="stylesheet">
 </head>

@@ -22,6 +22,7 @@ $result = $conn->query($sql);
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ค้นหาโรงแรม</title>
+    <link rel="icon" type="image/png" href="image/hotel-icon-coupon-codes-hotel.png">
     <link rel="stylesheet" href="style2.css?v=1.3">
     <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@400;600&display=swap" rel="stylesheet">
 </head>
@@ -64,7 +65,7 @@ $result = $conn->query($sql);
         <div class="container">
             <h1>ค้นหาโรงแรมในอำเภอเมืองจังหวัดปัตตานี</h1>
             <p>พบโรงแรมที่เหมาะสมกับคุณในพื้นที่ที่คุณต้องการ</p>
-            <form class="search-form">
+            <form class="search-form" action="hotel.php" method="get">
                 <input type="text" placeholder="ชื่อโรงแรมหรือสถานที่ใกล้เคียง">
                 <input type="text" placeholder="เลือกประเภทโรงแรม">
                 <button type="submit">ค้นหา</button>

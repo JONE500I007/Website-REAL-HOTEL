@@ -38,6 +38,7 @@ array_shift($all_images);
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?= htmlspecialchars($hotel["hotel_name"]) ?></title>
+    <link rel="icon" type="image/png" href="image/hotel-icon-coupon-codes-hotel.png">
     <link rel="stylesheet" href="style2.css?v=1.2">
     <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@400;600&display=swap" rel="stylesheet">
 </head>
@@ -123,9 +124,9 @@ array_shift($all_images);
                     <div class="detail-box">
                         <h3>สิ่งอำนวยความสะดวก</h3>
                         <ul>
-                            <li>ฟรี Wi-Fi</li>
-                            <li>ที่จอดรถฟรี</li>
-                            <li>สระว่ายน้ำ</li>
+                            <?php foreach (explode(",", $hotel["facilities"]) as $facility): ?>
+                                <li><?= htmlspecialchars(trim($facility)) ?></li>
+                            <?php endforeach; ?>
                         </ul>
                     </div>
                 </div>
@@ -138,8 +139,9 @@ array_shift($all_images);
                     <div class="location-box">
                         <h3>บริเวณโดยรอบ</h3>
                         <ul>
-                            <li>มหาวิทยาลัยสงขลานครินทร์ วิทยาเขตปัตตานี (1.2 กม.)</li>
-                            <li>ตลาดนัด (0.5 กม.)</li>
+                            <?php foreach (explode(",", $hotel["surrounding"]) as $place): ?>
+                                <li><?= htmlspecialchars(trim($place)) ?></li>
+                            <?php endforeach; ?>
                         </ul>
                     </div>
                 </div>
