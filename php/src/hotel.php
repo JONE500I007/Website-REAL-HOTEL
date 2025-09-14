@@ -2,7 +2,7 @@
 session_start();
 require_once "database.php";
 
-// ฟังก์ชันแสดงโรงแรมตามหมวดหมู่
+// Function to display hotels by category
 function showHotelsByCategory($conn, $title, $condition) {
     $sql = "
         SELECT hotels.*, hotel_images.image_path
@@ -47,9 +47,7 @@ function showHotelsByCategory($conn, $title, $condition) {
     <?php
 }
 
-// ---------------------------
-// 🔍 ส่วนการค้นหา
-// ---------------------------
+
 $conditions = [];
 
 if (!empty($_GET['keyword'])) {
@@ -114,9 +112,7 @@ if (count($conditions) > 0) {
 </header>
 
 <?php
-// ---------------------------
-// ถ้ามีการค้นหา → แสดงผลลัพธ์ค้นหา
-// ---------------------------
+// If there is a search just Show search results
 if ($where !== "") {
     $sql = "
         SELECT hotels.*, hotel_images.image_path
@@ -160,9 +156,7 @@ if ($where !== "") {
     echo '</div></div>';
 
 } else {
-    // ---------------------------
-    // ถ้าไม่มีการค้นหา → แสดงหมวดหมู่ราคา
-    // ---------------------------
+    // If there is no search just Show price category
     showHotelsByCategory($conn, "โรงแรมราคาประหยัดในอำเภอเมือง ปัตตานี", "price < 1000");
     showHotelsByCategory($conn, "โรงแรมครอบครัวในอำเภอเมือง ปัตตานี", "price >= 1000 AND price < 4000");
     showHotelsByCategory($conn, "โรงแรมหรูในอำเภอเมือง ปัตตานี", "price >= 4000");
@@ -198,7 +192,7 @@ document.addEventListener('click', function(event) {
     }
 });
 
-// ปุ่มเลื่อนการ์ด
+// card scroll button
 document.addEventListener("DOMContentLoaded", () => {
     document.querySelectorAll(".scroll-btn.right").forEach(btn => {
         btn.addEventListener("click", () => {
