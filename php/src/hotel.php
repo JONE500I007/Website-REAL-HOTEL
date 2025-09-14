@@ -46,24 +46,6 @@ function showHotelsByCategory($conn, $title, $condition) {
     </div>
     <?php
 }
-
-
-$conditions = [];
-
-if (!empty($_GET['keyword'])) {
-    $keyword = $conn->real_escape_string($_GET['keyword']);
-    $conditions[] = "(hotels.hotel_name LIKE '%$keyword%' OR hotels.location LIKE '%$keyword%')";
-}
-
-if (!empty($_GET['type'])) {
-    $type = $conn->real_escape_string($_GET['type']);
-    $conditions[] = "hotels.type LIKE '%$type%'";
-}
-
-$where = "";
-if (count($conditions) > 0) {
-    $where = "WHERE " . implode(" AND ", $conditions);
-}
 ?>
 
 <!DOCTYPE html>
