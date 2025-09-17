@@ -188,7 +188,19 @@ $stmt->close();
                     <div class="dropdown-menu" id="dropdownMenu">
                         <a href="edit_profile.php">แก้ไขโปรไฟล์</a>
                         <?php if ($_SESSION["role"] === "owner"): ?>
-                            <a href="manage_hotels.php">แก้ไขโรงแรม</a>
+                            <?php
+                                $owner_id = $_SESSION["user_id"];
+                                $check_sql = "SELECT id FROM hotels WHERE owner_id = ?";
+                                $check_stmt = $conn->prepare($check_sql);
+                                $check_stmt->bind_param("i", $owner_id);
+                                $check_stmt->execute();
+                                $check_result = $check_stmt->get_result();
+                                $hasHotel = $check_result->num_rows > 0;
+                                $check_stmt->close();
+                            ?>
+                            <a href="manage_hotels.php">
+                                <?= $hasHotel ? "แก้ไขโรงแรม" : "เพิ่มโรงแรม" ?>
+                            </a>
                         <?php endif; ?>
                         <a href="logout.php">ออกจากระบบ</a>
                     </div>

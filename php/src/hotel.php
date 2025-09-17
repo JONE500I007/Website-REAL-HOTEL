@@ -46,6 +46,19 @@ function showHotelsByCategory($conn, $title, $condition) {
     </div>
     <?php
 }
+
+
+$conditions = [];
+
+if (!empty($_GET['keyword'])) {
+    $keyword = $conn->real_escape_string($_GET['keyword']);
+    $conditions[] = "(hotels.hotel_name LIKE '%$keyword%' OR hotels.location LIKE '%$keyword%')";
+}
+
+$where = "";
+if (count($conditions) > 0) {
+    $where = "WHERE " . implode(" AND ", $conditions);
+}
 ?>
 
 <!DOCTYPE html>
@@ -55,7 +68,7 @@ function showHotelsByCategory($conn, $title, $condition) {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ค้นหาโรงแรม</title>
     <link rel="icon" type="image/png" href="image/hotel-icon-coupon-codes-hotel.png">
-    <link rel="stylesheet" href="style2.css?v=1.3">
+    <link rel="stylesheet" href="style2.css?v=1.5">
     <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@400;600&display=swap" rel="stylesheet">
 </head>
 <body>
@@ -83,7 +96,19 @@ function showHotelsByCategory($conn, $title, $condition) {
                     <div class="dropdown-menu" id="dropdownMenu">
                         <a href="edit_profile.php">แก้ไขโปรไฟล์</a>
                         <?php if ($_SESSION["role"] === "owner"): ?>
-                            <a href="manage_hotels.php">แก้ไขโรงแรม</a>
+                            <?php
+                                $owner_id = $_SESSION["user_id"];
+                                $check_sql = "SELECT id FROM hotels WHERE owner_id = ?";
+                                $check_stmt = $conn->prepare($check_sql);
+                                $check_stmt->bind_param("i", $owner_id);
+                                $check_stmt->execute();
+                                $check_result = $check_stmt->get_result();
+                                $hasHotel = $check_result->num_rows > 0;
+                                $check_stmt->close();
+                            ?>
+                            <a href="manage_hotels.php">
+                                <?= $hasHotel ? "แก้ไขโรงแรม" : "เพิ่มโรงแรม" ?>
+                            </a>
                         <?php endif; ?>
                         <a href="logout.php">ออกจากระบบ</a>
                     </div>

@@ -11,7 +11,7 @@ if (isset($_SESSION["user"])) {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>สมัครสมาชิก</title>
     <link rel="icon" type="image/png" href="image/hotel-icon-coupon-codes-hotel.png">
-    <link rel="stylesheet" href="style2.css?v=1.2">
+    <link rel="stylesheet" href="style2.css?v=1.5">
     <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@400;600&display=swap" rel="stylesheet">
 </head>
 <body>

@@ -81,6 +81,7 @@ body {
     display: flex;
     justify-content: center;
     gap: 10px;
+    position: relative;
 }
 
 .search-form input {
@@ -89,6 +90,11 @@ body {
     border: none;
     border-radius: 5px;
     font-size: 16px;
+}
+
+.search-form input#hotelSearch {
+    position: relative;
+    z-index: 2;
 }
 
 .search-form button {
@@ -367,20 +373,20 @@ body {
 }
 
 /* Wrapper */
-/* ตัวเลือกหลัก */
+/* Main options */
 .custom-select {
     background: #5d3f8c;
     border: 2px solid #5d3f8c;
     border-radius: 12px;
     color: #fff;
     font-size: 16px;
-    padding: 12px 40px 12px 12px; /* เว้นด้านขวาไว้ให้ลูกศร */
+    padding: 12px 40px 12px 12px; /* for the arrow */
     cursor: pointer;
     user-select: none;
     position: relative;
 }
 
-/* trigger (ตัวแสดงค่าที่เลือกไว้ + ลูกศร) */
+/* trigger (Selected value indicator + arrow) */
 .custom-select-trigger {
     display: flex;
     align-items: center;
@@ -405,7 +411,7 @@ body {
 /* dropdown list */
 .custom-options {
     position: absolute;
-    top: calc(100% + 5px); /* ให้มีระยะห่างเล็กน้อย */
+    top: calc(100% + 5px);
     left: 0;
     right: 0;
     background: #7b59a9;
@@ -433,7 +439,7 @@ body {
     background: #4a2f6b;
 }
 
-/* เปิด dropdown */
+/* open dropdown */
 .custom-select.open .custom-options {
     display: block;
 }
@@ -772,4 +778,51 @@ body {
 .map-section h3 {
     margin-bottom: 20px;
     color: #5d3f8c;
+}
+
+
+/* Live Search Dropdown */
+#searchResult {
+    position: absolute;
+    top: calc(100% + 5px);
+    left: 210px;
+    width: 325px;
+    background: #fff;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    max-height: 250px;
+    overflow-y: auto;
+    z-index: 999;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+}
+
+#searchResult:empty {
+    display: none;
+}
+
+#searchResult div {
+    padding: 10px;
+    border-bottom: 1px solid #eee;
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+}
+
+#searchResult div:hover {
+    background: #f9f9f9;
+}
+
+#searchResult strong {
+    font-size: 15px;
+    color: #333;
+}
+
+#searchResult span {
+    font-size: 13px;
+    color: #666;
+}
+
+#hotelSearch {
+    position: relative;
+    z-index: 2;
 }

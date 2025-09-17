@@ -23,9 +23,43 @@ $result = $conn->query($sql);
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ค้นหาโรงแรม</title>
     <link rel="icon" type="image/png" href="image/hotel-icon-coupon-codes-hotel.png">
-    <link rel="stylesheet" href="style2.css?v=1.3">
+    <link rel="stylesheet" href="style2.css?v=1.5">
     <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@400;600&display=swap" rel="stylesheet">
 </head>
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script>
+$(document).ready(function(){
+    $("#hotelSearch").keyup(function(){
+        let query = $(this).val();
+        if (query.length > 1) {
+            $.ajax({
+                url: "search_hotel.php",
+                method: "GET",
+                data: {query: query},
+                dataType: "json",
+                success: function(data){
+                    let html = "";
+                    if(data.length > 0){
+                        data.forEach(hotel => {
+                            html += `
+                                <div onclick="window.location='hotel_detail.php?id=${hotel.id}'">
+                                    <strong>${hotel.hotel_name}</strong>
+                                    <span>${hotel.location} | ราคา: ${hotel.price} บาท</span>
+                                </div>
+                            `;
+                        });
+                    } else {
+                        html = "<div>ไม่พบผลลัพธ์</div>";
+                    }
+                    $("#searchResult").html(html).show();
+                }
+            });
+        } else {
+            $("#searchResult").hide();
+        }
+    });
+});
+</script>
 <body>
 
     <header class="navbar">
@@ -51,7 +85,19 @@ $result = $conn->query($sql);
                     <div class="dropdown-menu" id="dropdownMenu">
                         <a href="edit_profile.php">แก้ไขโปรไฟล์</a>
                         <?php if ($_SESSION["role"] === "owner"): ?>
-                            <a href="manage_hotels.php">แก้ไขโรงแรม</a>
+                            <?php
+                                $owner_id = $_SESSION["user_id"];
+                                $check_sql = "SELECT id FROM hotels WHERE owner_id = ?";
+                                $check_stmt = $conn->prepare($check_sql);
+                                $check_stmt->bind_param("i", $owner_id);
+                                $check_stmt->execute();
+                                $check_result = $check_stmt->get_result();
+                                $hasHotel = $check_result->num_rows > 0;
+                                $check_stmt->close();
+                            ?>
+                            <a href="manage_hotels.php">
+                                <?= $hasHotel ? "แก้ไขโรงแรม" : "เพิ่มโรงแรม" ?>
+                            </a>
                         <?php endif; ?>
                         <a href="logout.php">ออกจากระบบ</a>
                     </div>
@@ -66,8 +112,9 @@ $result = $conn->query($sql);
             <h1>ค้นหาโรงแรมในอำเภอเมืองจังหวัดปัตตานี</h1>
             <p>พบโรงแรมที่เหมาะสมกับคุณในพื้นที่ที่คุณต้องการ</p>
             <form class="search-form" action="hotel.php" method="get">
-                <input type="text" placeholder="ชื่อโรงแรมหรือสถานที่ใกล้เคียง">
-                <input type="text" placeholder="เลือกประเภทโรงแรม">
+                <input type="text" id="hotelSearch" name="keyword" placeholder="ชื่อโรงแรมหรือสถานที่ใกล้เคียง">
+                <div id="searchResult"></div>
+                <input type="text" name="type" placeholder="เลือกประเภทโรงแรม">
                 <button type="submit">ค้นหา</button>
             </form>
         </div>
