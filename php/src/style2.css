@@ -826,3 +826,90 @@ body {
     position: relative;
     z-index: 2;
 }
+
+.password-wrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.password-wrapper input {
+    width: 100%;
+    padding-right: 45px;
+}
+
+.toggle-password {
+    position: absolute;
+    right: 10px;
+    top: 40%;
+    transform: translateY(-50%);
+    width: 26px;
+    height: 26px;
+    cursor: pointer;
+}
+
+/* Styled Select Box */
+.styled-select {
+    width: 100%;
+    padding: 12px 15px;
+    border: 2px solid #5d3f8c;
+    border-radius: 8px;
+    background-color: #fff;
+    font-size: 16px;
+    color: #333;
+    cursor: pointer;
+    appearance: none;
+    background-image: url("data:image/svg+xml;charset=US-ASCII,<svg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='%235d3f8c'><polygon points='0,0 16,0 8,8'/></svg>");
+    background-repeat: no-repeat;
+    background-position: right 12px center;
+    background-size: 16px;
+}
+
+.styled-select:focus {
+    outline: none;
+    border-color: #7b59a9;
+    box-shadow: 0 0 5px rgba(123, 89, 169, 0.5);
+}
+
+.styled-select option {
+    padding: 10px;
+}
+
+/* this book style2 for board.php */
+.booking-title {
+    text-align: center;
+    margin: 20px 0;
+    color: #5d3f8c;
+}
+
+.booking-list {
+    width: 90%;
+    margin: 30px auto;
+    border-collapse: collapse;
+    background: #fff;
+    border-radius: 10px;
+    overflow: hidden;
+    box-shadow: 0 3px 8px rgba(0,0,0,0.1);
+}
+
+.booking-list th {
+    background: #5d3f8c;
+    color: #fff;
+    padding: 12px;
+    text-align: center;
+}
+
+.booking-list td {
+    padding: 12px;
+    border-bottom: 1px solid #eee;
+    text-align: center;
+}
+
+.booking-list tr:hover {
+    background: #f7f3fc;
+}
+
+.booking-back {
+    text-align: center;
+    margin-top: 20px;
+}

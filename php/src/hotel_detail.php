@@ -80,6 +80,7 @@ array_shift($all_images);
                                 <?= $hasHotel ? "แก้ไขโรงแรม" : "เพิ่มโรงแรม" ?>
                             </a>
                         <?php endif; ?>
+                            <a href="board.php">ดูการจองโรงแรม</a>
                             <a href="logout.php">ออกจากระบบ</a>
                         </div>
                     </div>
@@ -146,7 +147,7 @@ array_shift($all_images);
                     <div class="price-box">
                         <p class="price-label">ราคาต่อคืน</p>
                         <p class="price-amount">฿<?= htmlspecialchars($hotel["price"]) ?></p>
-                        <a href="#" class="btn-booking">เลือกห้องพัก</a>
+                        <a href="booking.php?hotel_id=<?= $hotel["id"] ?>" class="btn-booking">จองโรงแรม</a>
                     </div>
                     <div class="location-box">
                         <h3>บริเวณโดยรอบ</h3>

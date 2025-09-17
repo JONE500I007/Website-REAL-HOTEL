@@ -11,7 +11,7 @@ if (isset($_SESSION["user"])) {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>สมัครสมาชิก</title>
     <link rel="icon" type="image/png" href="image/hotel-icon-coupon-codes-hotel.png">
-    <link rel="stylesheet" href="style2.css?v=1.5">
+    <link rel="stylesheet" href="style2.css?v=1.6">
     <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@400;600&display=swap" rel="stylesheet">
 </head>
 <body>
@@ -103,8 +103,17 @@ if (isset($_SESSION["user"])) {
                 <input type="text" name="full_name" placeholder="ชื่อ - สกุล">
                 <input type="email" name="email" placeholder="อีเมลของคุณ">
                 <input type="text" name="phone_number" placeholder="เบอร์โทรของคุณ">
-                <input type="password" name="password" placeholder="รหัสผ่าน">
+                <div class="password-wrapper">
+                    <input type="password" name="password" id="password" placeholder="รหัสผ่าน">
+                    <img src="image/hide.png" class="toggle-password" id="togglePassword1" alt="toggle">
+                </div>
+                <!--
                 <input type="password" name="repeat_password" placeholder="ยืนยันรหัสผ่าน">
+                -->
+                <div class="password-wrapper">
+                    <input type="password" name="repeat_password" id="repeat_password" placeholder="ยืนยันรหัสผ่าน">
+                    <img src="image/hide.png" class="toggle-password" id="togglePassword2" alt="toggle">
+                </div>
                 <button type="submit" name="submit">สมัครสมาชิก</button>
             </form>
             <p>ได้สมัครสมาชิกแล้วใช่หรือไม่? <a href="login.php">คลิกที่นี่เพื่อเข้าสู่ระบบ</a></p>
@@ -128,3 +137,25 @@ if (isset($_SESSION["user"])) {
     </footer>
 </body>
 </html>
+
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    function setupToggle(inputId, iconId) {
+        const passwordInput = document.getElementById(inputId);
+        const toggleIcon = document.getElementById(iconId);
+
+        toggleIcon.addEventListener("click", function() {
+            if (passwordInput.type === "password") {
+                passwordInput.type = "text";
+                toggleIcon.src = "image/view.png";
+            } else {
+                passwordInput.type = "password";
+                toggleIcon.src = "image/hide.png";
+            }
+        });
+    }
+
+    setupToggle("password", "togglePassword1");
+    setupToggle("repeat_password", "togglePassword2");
+});
+</script>

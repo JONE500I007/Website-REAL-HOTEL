@@ -31,6 +31,11 @@ if (isset($_POST["login"])) {
     }
 }
 ?>
+<?php if (isset($_GET["error"]) && $_GET["error"] === "login_required"): ?>
+    <div class="alert alert-danger">
+        กรุณาเข้าสู่ระบบก่อนทำการจอง
+    </div>
+<?php endif; ?>
 <!DOCTYPE html>
 <html lang="th">
 <head>
@@ -38,7 +43,7 @@ if (isset($_POST["login"])) {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>เข้าสู่ระบบ</title>
     <link rel="icon" type="image/png" href="image/hotel-icon-coupon-codes-hotel.png">
-    <link rel="stylesheet" href="style2.css?v=1.5">
+    <link rel="stylesheet" href="style2.css?v=1.6">
     <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@400;600&display=swap" rel="stylesheet">
 </head>
 <body>
@@ -64,7 +69,10 @@ if (isset($_POST["login"])) {
             <h2>เข้าสู่ระบบ</h2>
             <form action="login.php" method="post">
                 <input type="email" name="email" placeholder="อีเมล">
-                <input type="password" name="password" placeholder="รหัสผ่าน">
+                <div class="password-wrapper">
+                    <input type="password" name="password" id="password" placeholder="รหัสผ่าน">
+                    <img src="image/hide.png" class="toggle-password" id="togglePassword" alt="toggle">
+                </div>
                 <!--
                 <p class="admin-link">สำหรับ เจ้าของโรงแรม <a href="#">คลิกที่นี่</a></p>
                 -->
@@ -91,3 +99,20 @@ if (isset($_POST["login"])) {
     </footer>
 </body>
 </html>
+
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    const passwordInput = document.getElementById("password");
+    const toggleIcon = document.getElementById("togglePassword");
+
+    toggleIcon.addEventListener("click", function() {
+        if (passwordInput.type === "password") {
+            passwordInput.type = "text";
+            toggleIcon.src = "image/view.png";
+        } else {
+            passwordInput.type = "password";
+            toggleIcon.src = "image/hide.png";
+        }
+    });
+});
+</script>

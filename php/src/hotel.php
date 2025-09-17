@@ -110,6 +110,7 @@ if (count($conditions) > 0) {
                                 <?= $hasHotel ? "แก้ไขโรงแรม" : "เพิ่มโรงแรม" ?>
                             </a>
                         <?php endif; ?>
+                        <a href="board.php">ดูการจองโรงแรม</a>
                         <a href="logout.php">ออกจากระบบ</a>
                     </div>
                 </div>

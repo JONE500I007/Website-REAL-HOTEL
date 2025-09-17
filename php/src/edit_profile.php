@@ -126,7 +126,7 @@ $user = $result->fetch_assoc();
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>แก้ไขโปรไฟล์</title>
     <link rel="icon" type="image/png" href="image/hotel-icon-coupon-codes-hotel.png">
-    <link rel="stylesheet" href="style2.css?v=1.5">
+    <link rel="stylesheet" href="style2.css?v=1.6">
     <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@400;600&display=swap" rel="stylesheet">
 </head>
 <body>
@@ -167,6 +167,7 @@ $user = $result->fetch_assoc();
                                 <?= $hasHotel ? "แก้ไขโรงแรม" : "เพิ่มโรงแรม" ?>
                             </a>
                         <?php endif; ?>
+                        <a href="board.php">ดูการจองโรงแรม</a>
                         <a href="logout.php">ออกจากระบบ</a>
                     </div>
                 </div>
@@ -182,7 +183,13 @@ $user = $result->fetch_assoc();
                 <input type="text" name="full_name" placeholder="ชื่อ - สกุล" value="<?= htmlspecialchars($user["full_name"]) ?>">
                 <input type="text" name="email" placeholder="อีเมล" value="<?= htmlspecialchars($user["email"]) ?>">
                 <input type="text" name="phone_number" placeholder="เบอร์โทรของคุณ" value="<?= htmlspecialchars($user["phone_number"]) ?>">
+                <!--
                 <input type="password" name="new_password" placeholder="รหัสผ่านใหม่ (ไม่ต้องกรอกหากไม่ต้องการเปลี่ยน)">
+                        -->
+                <div class="password-wrapper">
+                    <input type="password" name="new_password" id="new_password" placeholder="รหัสผ่านใหม่ (ไม่ต้องกรอกหากไม่ต้องการเปลี่ยน)">
+                    <img src="image/hide.png" class="toggle-password" id="togglePassword" alt="toggle">
+                </div>
 
                 <!--
                 <input type="file" name="profile_picture" accept="image/*">
@@ -227,5 +234,22 @@ document.addEventListener('click', function(event) {
     if (menu && !profileIcon.contains(event.target)) {
         menu.style.display = "none";
     }
+});
+</script>
+
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    const passwordInput = document.getElementById("new_password");
+    const toggleIcon = document.getElementById("togglePassword");
+
+    toggleIcon.addEventListener("click", function() {
+        if (passwordInput.type === "password") {
+            passwordInput.type = "text";
+            toggleIcon.src = "image/view.png";
+        } else {
+            passwordInput.type = "password";
+            toggleIcon.src = "image/hide.png";
+        }
+    });
 });
 </script>
