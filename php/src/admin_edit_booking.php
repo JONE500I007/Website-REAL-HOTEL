@@ -62,6 +62,7 @@ $result = $conn->query($sql);
 <body>
     <div class="container">
         <h2 class="booking-title">จัดการการจอง</h2>
+        <!--show msg dont or error-->
         <?php if (!empty($msg)): ?>
             <div class="alert alert-success"><?= htmlspecialchars($msg) ?></div>
         <?php endif; ?>
