@@ -2,13 +2,13 @@
 session_start();
 require_once "database.php";
 
-// ตรวจสอบสิทธิ์
+// just check permissions
 if (!isset($_SESSION["user_id"]) || $_SESSION["role"] !== "admin") {
     echo "<div class='alert alert-danger'>คุณไม่มีสิทธิ์เข้าหน้านี้</div>";
     exit;
 }
 
-// อัพเดตการจอง
+// update booking
 if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST["update_booking"])) {
     $id = intval($_POST["id"]);
     $first_name = $_POST["first_name"];
@@ -32,7 +32,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST["update_booking"])) {
     $msg = "อัปเดตข้อมูลการจองเรียบร้อยแล้ว";
 }
 
-// ลบการจอง
+// delete booking
 if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST["delete_booking"])) {
     $id = intval($_POST["id"]);
 
@@ -48,7 +48,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST["delete_booking"])) {
     $stmt->close();
 }
 
-// ดึงข้อมูลการจองทั้งหมด
+// retrieve all booking information
 $sql = "SELECT * FROM bookings ORDER BY id ASC";
 $result = $conn->query($sql);
 ?>
