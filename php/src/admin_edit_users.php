@@ -28,6 +28,22 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST["update_user"])) {
     $stmt->close();
 }
 
+// delete users
+if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST["delete_user"])) {
+    $id = intval($_POST["id"]);
+
+    $sql = "DELETE FROM users WHERE id=?";
+    $stmt = $conn->prepare($sql);
+    $stmt->bind_param("i", $id);
+
+    if ($stmt->execute()) {
+        $msg = "ลบผู้ใช้เรียบร้อยแล้ว";
+    } else {
+        $msg = "เกิดข้อผิดพลาดในการลบ: " . $stmt->error;
+    }
+    $stmt->close();
+}
+
 // Retrieve all user data
 $sql = "SELECT * FROM users ORDER BY id ASC";
 $result = $conn->query($sql);
@@ -77,6 +93,7 @@ $result = $conn->query($sql);
                         <td>
                             <input type="hidden" name="id" value="<?= $row["id"] ?>">
                             <button type="submit" name="update_user">บันทึก</button>
+                            <button type="submit" name="delete_user" onclick="return confirm('คุณแน่ใจหรือไม่ว่าต้องการลบผู้ใช้นี้?');">ลบ</button>
                         </td>
                     </form>
                 </tr>

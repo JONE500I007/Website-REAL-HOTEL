@@ -32,6 +32,22 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST["update_booking"])) {
     $msg = "อัปเดตข้อมูลการจองเรียบร้อยแล้ว";
 }
 
+// ลบการจอง
+if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST["delete_booking"])) {
+    $id = intval($_POST["id"]);
+
+    $sql = "DELETE FROM bookings WHERE id=?";
+    $stmt = $conn->prepare($sql);
+    $stmt->bind_param("i", $id);
+
+    if ($stmt->execute()) {
+        $msg = "ลบข้อมูลการจองเรียบร้อยแล้ว";
+    } else {
+        $msg = "เกิดข้อผิดพลาดในการลบ: " . $stmt->error;
+    }
+    $stmt->close();
+}
+
 // ดึงข้อมูลการจองทั้งหมด
 $sql = "SELECT * FROM bookings ORDER BY id ASC";
 $result = $conn->query($sql);
@@ -84,6 +100,8 @@ $result = $conn->query($sql);
                             <td>
                                 <input type="hidden" name="id" value="<?= $row["id"] ?>">
                                 <button type="submit" name="update_booking">บันทึก</button>
+                                <br><br>
+                                <button type="submit" name="delete_booking" onclick="return confirm('คุณแน่ใจหรือไม่ว่าต้องการลบการจองนี้?');">ลบ</button>
                             </td>
                         </form>
                     </tr>
