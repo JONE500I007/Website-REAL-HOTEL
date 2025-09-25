@@ -68,7 +68,7 @@ if (count($conditions) > 0) {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ค้นหาโรงแรม</title>
     <link rel="icon" type="image/png" href="image/hotel-icon-coupon-codes-hotel.png">
-    <link rel="stylesheet" href="style2.css?v=1.5">
+    <link rel="stylesheet" href="style2.css?v=1.7">
     <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@400;600&display=swap" rel="stylesheet">
 </head>
 <body>
@@ -95,7 +95,7 @@ if (count($conditions) > 0) {
                     </div>
                     <div class="dropdown-menu" id="dropdownMenu">
                         <a href="edit_profile.php">แก้ไขโปรไฟล์</a>
-                        <?php if ($_SESSION["role"] === "owner"): ?>
+                        <?php if ($_SESSION["role"] === "owner" || $_SESSION["role"] === "admin"): ?>
                             <?php
                                 $owner_id = $_SESSION["user_id"];
                                 $check_sql = "SELECT id FROM hotels WHERE owner_id = ?";
@@ -106,10 +106,16 @@ if (count($conditions) > 0) {
                                 $hasHotel = $check_result->num_rows > 0;
                                 $check_stmt->close();
                             ?>
+
                             <a href="manage_hotels.php">
                                 <?= $hasHotel ? "แก้ไขโรงแรม" : "เพิ่มโรงแรม" ?>
                             </a>
                         <?php endif; ?>
+
+                        <?php if ($_SESSION["role"] === "admin"): ?>
+                            <a href="admin_manage.php">จัดการระบบ</a>
+                        <?php endif; ?>
+
                         <a href="board.php">ดูการจองโรงแรม</a>
                         <a href="logout.php">ออกจากระบบ</a>
                     </div>
@@ -165,9 +171,9 @@ if ($where !== "") {
 
 } else {
     // If there is no search just Show price category
-    showHotelsByCategory($conn, "โรงแรมราคาประหยัดในอำเภอเมือง ปัตตานี", "price < 1000");
-    showHotelsByCategory($conn, "โรงแรมครอบครัวในอำเภอเมือง ปัตตานี", "price >= 1000 AND price < 4000");
-    showHotelsByCategory($conn, "โรงแรมหรูในอำเภอเมือง ปัตตานี", "price >= 4000");
+    showHotelsByCategory($conn, "โรงแรมราคาประหยัดในอำเภอเมือง ปัตตานี", "price < 499");
+    showHotelsByCategory($conn, "โรงแรมที่แนะนำอำเภอเมือง ปัตตานี", "price >= 500 AND price < 999");
+    showHotelsByCategory($conn, "โรงแรมหรูในอำเภอเมือง ปัตตานี", "price >= 1000");
 }
 ?>
 

@@ -7,6 +7,15 @@ if (!isset($_SESSION["user_id"])) {
     exit;
 }
 
+// load databases
+$sql = "SELECT * FROM users WHERE id = ?";
+$stmt = $conn->prepare($sql);
+$stmt->bind_param("i", $_SESSION["user_id"]);
+$stmt->execute();
+$result = $stmt->get_result();
+$user = $result->fetch_assoc();
+$user_id = $user["id"];
+$stmt->close();
 
 
 $hotel_id = $_GET["hotel_id"] ?? 0;
@@ -93,7 +102,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                     </div>
                     <div class="dropdown-menu" id="dropdownMenu">
                         <a href="edit_profile.php">แก้ไขโปรไฟล์</a>
-                        <?php if ($_SESSION["role"] === "owner"): ?>
+                        <?php if ($_SESSION["role"] === "owner" || $_SESSION["role"] === "admin"): ?>
                             <?php
                                 $owner_id = $_SESSION["user_id"];
                                 $check_sql = "SELECT id FROM hotels WHERE owner_id = ?";
@@ -108,6 +117,11 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                                 <?= $hasHotel ? "แก้ไขโรงแรม" : "เพิ่มโรงแรม" ?>
                             </a>
                         <?php endif; ?>
+
+                        <?php if ($_SESSION["role"] === "admin"): ?>
+                            <a href="admin_manage.php">จัดการระบบ</a>
+                        <?php endif; ?>
+                        
                         <a href="board.php">ดูการจองโรงแรม</a>
                         <a href="logout.php">ออกจากระบบ</a>
                     </div>
@@ -125,15 +139,23 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                     <h3>ผู้เข้าพักหลัก</h3>
                     <p style="color:red; font-size:14px;">* จำเป็นต้องระบุ</p>
 
+                    <?php
+                    $full_name = $user["full_name"] ?? "";
+                    $name_parts = explode(" ", $full_name, 2);
+                    $first_name = $name_parts[0] ?? "";
+                    $last_name  = $name_parts[1] ?? "";
+                    ?>
                     <div style="display:flex; gap:10px;">
-                        <input type="text" name="first_name" placeholder="ชื่อ *" required>
-                        <input type="text" name="last_name" placeholder="นามสกุล *" required>
+                        <input type="text" name="first_name" placeholder="ชื่อ *" 
+                            value="<?= htmlspecialchars($first_name) ?>" required>
+                        <input type="text" name="last_name" placeholder="นามสกุล *" 
+                            value="<?= htmlspecialchars($last_name) ?>" required>
                     </div>
 
-                    <input type="email" name="email" placeholder="อีเมล *" required>
+                    <input type="email" name="email" placeholder="อีเมล *" value="<?= htmlspecialchars($user["email"]) ?>" required>
                     <small>กรุณาตรวจสอบว่าอีเมลของท่านถูกต้องหรือไม่ เราจะส่งใบยืนยันการจองไปที่อีเมลนี้</small>
 
-                    <input type="text" name="phone" placeholder="หมายเลขโทรศัพท์ (จำเป็น)" required>
+                    <input type="text" name="phone" placeholder="หมายเลขโทรศัพท์ (จำเป็น)" value="<?= htmlspecialchars($user["phone_number"]) ?>" required>
 
                     <div class="custom-select" id="countrySelect">
                         <div class="custom-select-trigger">-- เลือกประเทศ --</div>

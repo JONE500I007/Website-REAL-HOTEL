@@ -152,7 +152,7 @@ $user = $result->fetch_assoc();
                     </div>
                     <div class="dropdown-menu" id="dropdownMenu">
                         <a href="edit_profile.php">แก้ไขโปรไฟล์</a>
-                        <?php if ($_SESSION["role"] === "owner"): ?>
+                        <?php if ($_SESSION["role"] === "owner" || $_SESSION["role"] === "admin"): ?>
                             <?php
                                 $owner_id = $_SESSION["user_id"];
                                 $check_sql = "SELECT id FROM hotels WHERE owner_id = ?";
@@ -167,6 +167,11 @@ $user = $result->fetch_assoc();
                                 <?= $hasHotel ? "แก้ไขโรงแรม" : "เพิ่มโรงแรม" ?>
                             </a>
                         <?php endif; ?>
+
+                        <?php if ($_SESSION["role"] === "admin"): ?>
+                            <a href="admin_manage.php">จัดการระบบ</a>
+                        <?php endif; ?>
+                        
                         <a href="board.php">ดูการจองโรงแรม</a>
                         <a href="logout.php">ออกจากระบบ</a>
                     </div>

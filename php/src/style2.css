@@ -157,6 +157,9 @@ body {
 
 
 .hotel-card {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
     flex: 0 0 auto;
     background-color: #5d3f8c;
     color: white;
@@ -192,6 +195,9 @@ body {
 }
 
 .card-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
     padding: 20px;
 }
 
@@ -219,6 +225,8 @@ body {
 }
 
 .btn-details {
+    margin-top: auto;
+    align-self: flex-start;
     display: inline-block;
     background-color: #7b59a9;
     color: white;
@@ -913,3 +921,26 @@ body {
     text-align: center;
     margin-top: 20px;
 }
+
+.booking-list {
+    width: 100%;
+    max-width: 1200px;
+    margin: 0 auto;
+    border-collapse: collapse;
+    overflow-x: auto;
+}
+
+.booking-list th, 
+.booking-list td {
+    padding: 8px;
+    text-align: center;
+    vertical-align: middle;
+}
+
+.booking-list input, 
+.booking-list select {
+    width: 100%;
+    max-width: 180px;
+    box-sizing: border-box;
+}
+
