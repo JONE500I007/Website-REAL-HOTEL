@@ -1,109 +1,108 @@
 <?php
 session_start();
-require_once "database.php";
+require_once "config/database.php";
 
-// check permissions
 if (!isset($_SESSION["user_id"]) || $_SESSION["role"] !== "admin") {
-    echo "<div class='alert alert-danger'>คุณไม่มีสิทธิ์เข้าหน้านี้</div>";
+    header("Location: index.php");
     exit;
 }
 
-// update users
-if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST["update_user"])) {
-    $id = intval($_POST["id"]);
-    $full_name = $_POST["full_name"];
-    $email = $_POST["email"];
-    $phone = $_POST["phone_number"];
-    $role = $_POST["role"];
+$msg     = '';
+$msgType = 'success';
 
-    $sql = "UPDATE users SET full_name=?, email=?, phone_number=?, role=? WHERE id=?";
-    $stmt = $conn->prepare($sql);
-    $stmt->bind_param("ssssi", $full_name, $email, $phone, $role, $id);
+if ($_SERVER["REQUEST_METHOD"] === "POST") {
+    if (isset($_POST["update_user"])) {
+        $id        = (int) $_POST["id"];
+        $full_name = $_POST["full_name"];
+        $email     = $_POST["email"];
+        $phone     = $_POST["phone_number"];
+        $role      = $_POST["role"];
 
-    if ($stmt->execute()) {
-        $msg = "อัปเดตข้อมูลผู้ใช้เรียบร้อยแล้ว";
-    } else {
-        $msg = "เกิดข้อผิดพลาด: " . $stmt->error;
+        $stmt = $conn->prepare("UPDATE users SET full_name=?, email=?, phone_number=?, role=? WHERE id=?");
+        $stmt->bind_param("ssssi", $full_name, $email, $phone, $role, $id);
+        $msg     = $stmt->execute() ? "อัปเดตข้อมูลผู้ใช้เรียบร้อยแล้ว" : "เกิดข้อผิดพลาด: " . $stmt->error;
+        $msgType = $stmt->execute() ? 'success' : 'danger';
+        $stmt->close();
     }
-    $stmt->close();
+
+    if (isset($_POST["delete_user"])) {
+        $id   = (int) $_POST["id"];
+        $stmt = $conn->prepare("DELETE FROM users WHERE id=?");
+        $stmt->bind_param("i", $id);
+        $msg     = $stmt->execute() ? "ลบผู้ใช้เรียบร้อยแล้ว" : "เกิดข้อผิดพลาดในการลบ: " . $stmt->error;
+        $msgType = 'success';
+        $stmt->close();
+    }
 }
 
-// delete users
-if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST["delete_user"])) {
-    $id = intval($_POST["id"]);
-
-    $sql = "DELETE FROM users WHERE id=?";
-    $stmt = $conn->prepare($sql);
-    $stmt->bind_param("i", $id);
-
-    if ($stmt->execute()) {
-        $msg = "ลบผู้ใช้เรียบร้อยแล้ว";
-    } else {
-        $msg = "เกิดข้อผิดพลาดในการลบ: " . $stmt->error;
-    }
-    $stmt->close();
-}
-
-// Retrieve all user data
-$sql = "SELECT * FROM users ORDER BY id ASC";
-$result = $conn->query($sql);
+$result = $conn->query("SELECT * FROM users ORDER BY id ASC");
 ?>
-
 <!DOCTYPE html>
 <html lang="th">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>จัดการผู้ใช้ (Admin)</title>
-    <link rel="stylesheet" href="style2.css?v=1.6">
+    <link rel="icon" type="image/png" href="image/hotel-icon-coupon-codes-hotel.png">
+    <link rel="stylesheet" href="assets/css/style2.css?v=<?= filemtime(__DIR__ . '/assets/css/style2.css') ?>">
+    <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@400;600&display=swap" rel="stylesheet">
 </head>
 <body>
-    <div class="container">
-        <h2 class="booking-title">จัดการผู้ใช้</h2>
-        <!--show msg dont or error-->
-        <?php if (!empty($msg)): ?>
-            <div class="alert alert-success"><?= htmlspecialchars($msg) ?></div>
-        <?php endif; ?>
 
-        <table class="booking-list">
-            <thead>
-                <tr>
-                    <th>ID</th>
-                    <th>ชื่อเต็ม</th>
-                    <th>อีเมล</th>
-                    <th>เบอร์โทร</th>
-                    <th>Role</th>
-                    <th>การจัดการ</th>
-                </tr>
-            </thead>
-            <tbody>
-                <?php while ($row = $result->fetch_assoc()): ?>
-                <tr>
-                    <form method="post">
-                        <td><?= $row["id"] ?></td>
-                        <td><input type="text" name="full_name" value="<?= htmlspecialchars($row["full_name"]) ?>"></td>
-                        <td><input type="email" name="email" value="<?= htmlspecialchars($row["email"]) ?>"></td>
-                        <td><input type="text" name="phone_number" value="<?= htmlspecialchars($row["phone_number"]) ?>"></td>
-                        <td>
-                            <select name="role" class="styled-select">
-                                <option value="user" <?= $row["role"]=="user" ? "selected" : "" ?>>User</option>
-                                <option value="owner" <?= $row["role"]=="owner" ? "selected" : "" ?>>Owner</option>
-                                <option value="admin" <?= $row["role"]=="admin" ? "selected" : "" ?>>Admin</option>
-                            </select>
-                        </td>
-                        <td>
-                            <input type="hidden" name="id" value="<?= $row["id"] ?>">
-                            <button type="submit" name="update_user">บันทึก</button>
-                            <button type="submit" name="delete_user" onclick="return confirm('คุณแน่ใจหรือไม่ว่าต้องการลบผู้ใช้นี้?');">ลบ</button>
-                        </td>
-                    </form>
-                </tr>
-                <?php endwhile; ?>
-            </tbody>
-        </table>
+<?php require_once "includes/header.php"; ?>
 
-        <div class="booking-back">
-            <a href="admin_manage.php">⬅ กลับหน้าหลัก</a>
-        </div>
+<div class="container">
+    <h2 class="booking-title">จัดการผู้ใช้</h2>
+
+    <?php if (!empty($msg)): ?>
+        <div class="alert alert-<?= $msgType ?>"><?= htmlspecialchars($msg) ?></div>
+    <?php endif; ?>
+
+    <table class="booking-list">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>ชื่อเต็ม</th>
+                <th>อีเมล</th>
+                <th>เบอร์โทร</th>
+                <th>Role</th>
+                <th>การจัดการ</th>
+            </tr>
+        </thead>
+        <tbody>
+            <?php while ($row = $result->fetch_assoc()): ?>
+            <tr>
+                <form method="post">
+                    <td><?= $row["id"] ?></td>
+                    <td><input type="text" name="full_name" value="<?= htmlspecialchars($row["full_name"]) ?>"></td>
+                    <td><input type="email" name="email" value="<?= htmlspecialchars($row["email"]) ?>"></td>
+                    <td><input type="text" name="phone_number" value="<?= htmlspecialchars($row["phone_number"]) ?>"></td>
+                    <td>
+                        <select name="role" class="styled-select">
+                            <option value="user"  <?= $row["role"] === "user"  ? "selected" : "" ?>>User</option>
+                            <option value="owner" <?= $row["role"] === "owner" ? "selected" : "" ?>>Owner</option>
+                            <option value="admin" <?= $row["role"] === "admin" ? "selected" : "" ?>>Admin</option>
+                        </select>
+                    </td>
+                    <td>
+                        <input type="hidden" name="id" value="<?= $row["id"] ?>">
+                        <button type="submit" name="update_user">บันทึก</button>
+                        <button type="submit" name="delete_user"
+                                onclick="return confirm('คุณแน่ใจหรือไม่ว่าต้องการลบผู้ใช้นี้?');">ลบ</button>
+                    </td>
+                </form>
+            </tr>
+            <?php endwhile; ?>
+        </tbody>
+    </table>
+
+    <div class="booking-back">
+        <a href="admin_manage.php">⬅ กลับเมนู Admin</a>
     </div>
+</div>
+
+<?php require_once "includes/footer.php"; ?>
+
+<script src="assets/js/navbar.js"></script>
 </body>
 </html>

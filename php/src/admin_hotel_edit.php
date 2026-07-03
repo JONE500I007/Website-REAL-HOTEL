@@ -1,69 +1,67 @@
 <?php
 session_start();
-require_once "database.php";
+require_once "config/database.php";
 
-// check permissions
 if (!isset($_SESSION["user_id"]) || $_SESSION["role"] !== "admin") {
-    echo "<div class='alert alert-danger'>คุณไม่มีสิทธิ์เข้าหน้านี้</div>";
+    header("Location: index.php");
     exit;
 }
 
-// updates hotel
-if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST["update_hotel"])) {
-    $id = intval($_POST["id"]);
-    $hotel_name = $_POST["hotel_name"];
-    $location = $_POST["location"];
-    $price = $_POST["price"];
-    $description = $_POST["description"];
-    $facilities = $_POST["facilities"];
-    $surrounding = $_POST["surrounding"];
+$msg = '';
 
-    $sql = "UPDATE hotels 
-            SET hotel_name=?, location=?, price=?, description=?, facilities=?, surrounding=? 
-            WHERE id=?";
-    $stmt = $conn->prepare($sql);
-    $stmt->bind_param("ssssssi", $hotel_name, $location, $price, $description, $facilities, $surrounding, $id);
-    $stmt->execute();
-    $stmt->close();
+if ($_SERVER["REQUEST_METHOD"] === "POST") {
+    if (isset($_POST["update_hotel"])) {
+        $id          = (int) $_POST["id"];
+        $hotel_name  = $_POST["hotel_name"];
+        $location    = $_POST["location"];
+        $price       = $_POST["price"];
+        $description = $_POST["description"];
+        $facilities  = $_POST["facilities"];
+        $surrounding = $_POST["surrounding"];
 
-    $msg = "อัปเดตข้อมูลโรงแรมเรียบร้อยแล้ว";
-}
-
-// delete hotels
-if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST["delete_hotel"])) {
-    $id = intval($_POST["id"]);
-
-    $sql = "DELETE FROM hotels WHERE id=?";
-    $stmt = $conn->prepare($sql);
-    $stmt->bind_param("i", $id);
-
-    if ($stmt->execute()) {
-        $msg = "ลบโรงแรมเรียบร้อยแล้ว";
-    } else {
-        $msg = "เกิดข้อผิดพลาดในการลบ: " . $stmt->error;
+        $stmt = $conn->prepare("
+            UPDATE hotels SET hotel_name=?, location=?, price=?, description=?, facilities=?, surrounding=?
+            WHERE id=?
+        ");
+        $stmt->bind_param("ssssssi", $hotel_name, $location, $price, $description, $facilities, $surrounding, $id);
+        $stmt->execute();
+        $stmt->close();
+        $msg = "อัปเดตข้อมูลโรงแรมเรียบร้อยแล้ว";
     }
-    $stmt->close();
+
+    if (isset($_POST["delete_hotel"])) {
+        $id   = (int) $_POST["id"];
+        $stmt = $conn->prepare("DELETE FROM hotels WHERE id=?");
+        $stmt->bind_param("i", $id);
+        $msg = $stmt->execute() ? "ลบโรงแรมเรียบร้อยแล้ว" : "เกิดข้อผิดพลาดในการลบ: " . $stmt->error;
+        $stmt->close();
+    }
 }
 
-// retrieve all hotel data
-$sql = "SELECT * FROM hotels ORDER BY id ASC";
-$result = $conn->query($sql);
+$result = $conn->query("SELECT * FROM hotels ORDER BY id ASC");
 ?>
 <!DOCTYPE html>
 <html lang="th">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>จัดการโรงแรม (Admin)</title>
-    <link rel="stylesheet" href="style2.css?v=1.6">
+    <link rel="icon" type="image/png" href="image/hotel-icon-coupon-codes-hotel.png">
+    <link rel="stylesheet" href="assets/css/style2.css?v=<?= filemtime(__DIR__ . '/assets/css/style2.css') ?>">
+    <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@400;600&display=swap" rel="stylesheet">
 </head>
 <body>
-    <div class="container">
-        <h2 class="booking-title">จัดการโรงแรม</h2>
-        <!--show msg dont or error-->
-        <?php if (!empty($msg)): ?>
-            <div class="alert alert-success"><?= htmlspecialchars($msg) ?></div>
-        <?php endif; ?>
 
+<?php require_once "includes/header.php"; ?>
+
+<div class="container">
+    <h2 class="booking-title">จัดการโรงแรม</h2>
+
+    <?php if (!empty($msg)): ?>
+        <div class="alert alert-success"><?= htmlspecialchars($msg) ?></div>
+    <?php endif; ?>
+
+    <div style="overflow-x:auto;">
         <table class="booking-list">
             <thead>
                 <tr>
@@ -92,17 +90,23 @@ $result = $conn->query($sql);
                             <input type="hidden" name="id" value="<?= $row["id"] ?>">
                             <button type="submit" name="update_hotel">บันทึก</button>
                             <br><br>
-                            <button type="submit" name="delete_hotel" onclick="return confirm('คุณแน่ใจหรือไม่ว่าต้องการลบโรงแรมนี้?');">ลบ</button>
+                            <button type="submit" name="delete_hotel"
+                                    onclick="return confirm('คุณแน่ใจหรือไม่ว่าต้องการลบโรงแรมนี้?');">ลบ</button>
                         </td>
                     </form>
                 </tr>
                 <?php endwhile; ?>
             </tbody>
         </table>
-
-        <div class="booking-back">
-            <a href="admin_manage.php">⬅ กลับเมนู Admin</a>
-        </div>
     </div>
+
+    <div class="booking-back">
+        <a href="admin_manage.php">⬅ กลับเมนู Admin</a>
+    </div>
+</div>
+
+<?php require_once "includes/footer.php"; ?>
+
+<script src="assets/js/navbar.js"></script>
 </body>
 </html>

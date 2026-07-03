@@ -1,0 +1,11 @@
+# Secrets
+php/src/.env
+
+# OS / editor junk
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# Claude Code session state (local only)
+.claude/

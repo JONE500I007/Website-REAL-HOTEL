@@ -2,40 +2,33 @@
 session_start();
 if (isset($_SESSION["user"])) {
     header("Location: index.php");
+    exit;
 }
 
-require_once "database.php";
+require_once "config/database.php";
+
 if (isset($_POST["login"])) {
-    $email = $_POST["email"];
+    $email    = $_POST["email"];
     $password = $_POST["password"];
 
-    $sql = "SELECT * FROM users WHERE email = ?";
-    $stmt = $conn->prepare($sql);
+    $stmt = $conn->prepare("SELECT * FROM users WHERE email = ?");
     $stmt->bind_param("s", $email);
     $stmt->execute();
-
-    $result = $stmt->get_result();
-    $user = $result->fetch_assoc();
+    $user = $stmt->get_result()->fetch_assoc();
 
     if ($user && password_verify($password, $user["password"])) {
-        
-        $_SESSION["user_id"] = $user["id"];
-        $_SESSION["user_email"] = $user["email"];
-        $_SESSION["user"] = $user["full_name"];
-        $_SESSION["role"] = $user["role"];
+        $_SESSION["user_id"]         = $user["id"];
+        $_SESSION["user_email"]      = $user["email"];
+        $_SESSION["user"]            = $user["full_name"];
+        $_SESSION["role"]            = $user["role"];
         $_SESSION["profile_picture"] = $user["profile_picture"];
         header("Location: index.php");
         exit;
     } else {
-        echo "<div class='alert alert-danger'>Invalid email or password.</div>";
+        $loginError = "อีเมลหรือรหัสผ่านไม่ถูกต้อง";
     }
 }
 ?>
-<?php if (isset($_GET["error"]) && $_GET["error"] === "login_required"): ?>
-    <div class="alert alert-danger">
-        กรุณาเข้าสู่ระบบก่อนทำการจอง
-    </div>
-<?php endif; ?>
 <!DOCTYPE html>
 <html lang="th">
 <head>
@@ -43,76 +36,85 @@ if (isset($_POST["login"])) {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>เข้าสู่ระบบ</title>
     <link rel="icon" type="image/png" href="image/hotel-icon-coupon-codes-hotel.png">
-    <link rel="stylesheet" href="style2.css?v=1.6">
+    <link rel="stylesheet" href="assets/css/style2.css?v=<?= filemtime(__DIR__ . '/assets/css/style2.css') ?>">
     <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@400;600&display=swap" rel="stylesheet">
 </head>
 <body>
-    <header class="navbar">
-        <div class="container">
-            <a href="index.php" class="logo">
-                <img src="image\hotel-icon-coupon-codes-hotel.png" alt="Logo">
-            </a>
-            <nav class="nav-links">
-                <a href="index.php">Home</a>
-                <a href="hotel.php">Hotel</a>
-                <a href="contact.php">Contact</a>
-            </nav>
-            <div class="auth-links">
-                <a href="register.php" class="btn-signup">สมัครสมาชิก</a>
-                <a href="login.php" class="btn-login">เข้าสู่ระบบ</a>
-            </div>
+
+<div class="auth-page auth-page--login">
+
+    <!-- Left decorative panel -->
+    <div class="auth-panel">
+        <a href="index.php" class="auth-panel-logo">
+            <img src="image/hotel-icon-coupon-codes-hotel.png" alt="Logo">
+        </a>
+        <h1>กลับมาแล้ว<br>ยินดีต้อนรับ!</h1>
+        <p>เข้าสู่ระบบเพื่อดูการจองและสิทธิพิเศษของคุณ</p>
+        <div class="auth-panel-badges">
+            <span>📅 ดูการจองได้ทันที</span>
+            <span>💜 สิทธิพิเศษสมาชิก</span>
         </div>
-    </header>
-    
-    <div class="form-container">
-        <div class="form-card">
-            <h2>เข้าสู่ระบบ</h2>
-            <form action="login.php" method="post">
-                <input type="email" name="email" placeholder="อีเมล">
-                <div class="password-wrapper">
-                    <input type="password" name="password" id="password" placeholder="รหัสผ่าน">
-                    <img src="image/hide.png" class="toggle-password" id="togglePassword" alt="toggle">
+        <a href="index.php" class="auth-back-link">← กลับหน้าหลัก</a>
+    </div>
+
+    <!-- Right form panel -->
+    <div class="auth-form-side">
+        <div class="auth-form-box">
+            <div class="auth-form-header">
+                <a href="index.php" class="auth-form-back">← กลับหน้าหลัก</a>
+                <h2>เข้าสู่ระบบ</h2>
+                <p>ยังไม่มีบัญชี? <a href="register.php">สมัครสมาชิก</a></p>
+            </div>
+
+            <?php if (isset($_GET["error"]) && $_GET["error"] === "login_required"): ?>
+                <div class="alert alert-danger">⚠ กรุณาเข้าสู่ระบบก่อนทำการจอง</div>
+            <?php endif; ?>
+
+            <?php if (!empty($loginError)): ?>
+                <div class="alert alert-danger">⚠ <?= htmlspecialchars($loginError) ?></div>
+            <?php endif; ?>
+
+            <form action="login.php" method="post" class="auth-form">
+                <div class="field-group">
+                    <label>อีเมล</label>
+                    <div class="field-wrap">
+                        <span class="field-icon">✉</span>
+                        <input type="email" name="email" placeholder="example@email.com" required>
+                    </div>
                 </div>
-                <!--
-                <p class="admin-link">สำหรับ เจ้าของโรงแรม <a href="#">คลิกที่นี่</a></p>
-                -->
-                <button type="submit" name="login">เข้าสู่ระบบ</button>
+                <div class="field-group">
+                    <label>รหัสผ่าน</label>
+                    <div class="field-wrap password-wrapper">
+                        <span class="field-icon">🔑</span>
+                        <input type="password" name="password" id="password" placeholder="รหัสผ่านของคุณ" required>
+                        <img src="image/hide.png" class="toggle-password" id="togglePassword" alt="toggle">
+                    </div>
+                </div>
+                <button type="submit" name="login" class="auth-btn">เข้าสู่ระบบ</button>
             </form>
-            <p>สมัครสมาชิกแล้วหรือยัง? <a href="register.php">คลิกที่นี่เพื่อสมัครสมาชิก</a></p>
+
+            <div class="auth-divider">หรือ</div>
+
+            <a href="auth/google_login.php" class="btn-google">
+                <img src="image/google-icon.svg" alt="Google">
+                เข้าสู่ระบบด้วย Google
+            </a>
         </div>
     </div>
-    
-    <footer class="footer">
-        <div class="container">
-            <div class="footer-content">
-                <div class="footer-logo">
-                    <img src="image\hotel-icon-coupon-codes-hotel.png" alt="Footer Logo">
-                </div>
-                <p>© 2025 PNVC, นายครรชิดพล เพ็งเอียด</p>
-                <div class="social-icons">
-                    <a href="https://x.com/FGgez777"><img src="image\twwokX.png" alt="Twitter_X"></a>
-                    <a href="https://www.instagram.com/face.2339/?igsh=dWh6eGtmbjVpanRt"><img src="image\insatagem.png" alt="Instagram"></a>
-                    <a href="https://www.facebook.com/face.pengeid/"><img src="image\fackbookicon.png" alt="Facebook"></a>
-                </div>
-            </div>
-        </div>
-    </footer>
-</body>
-</html>
+
+</div>
 
 <script>
-document.addEventListener("DOMContentLoaded", function() {
+document.addEventListener("DOMContentLoaded", function () {
     const passwordInput = document.getElementById("password");
-    const toggleIcon = document.getElementById("togglePassword");
-
-    toggleIcon.addEventListener("click", function() {
-        if (passwordInput.type === "password") {
-            passwordInput.type = "text";
-            toggleIcon.src = "image/view.png";
-        } else {
-            passwordInput.type = "password";
-            toggleIcon.src = "image/hide.png";
-        }
+    const toggleIcon    = document.getElementById("togglePassword");
+    if (!passwordInput || !toggleIcon) return;
+    toggleIcon.addEventListener("click", function () {
+        passwordInput.type = passwordInput.type === "password" ? "text" : "password";
+        toggleIcon.src = passwordInput.type === "password" ? "image/hide.png" : "image/view.png";
     });
 });
 </script>
+
+</body>
+</html>

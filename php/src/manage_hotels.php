@@ -1,339 +1,827 @@
 <?php
 session_start();
-require_once "database.php";
+require_once "config/database.php";
+require_once "includes/functions.php";
 
 if (!isset($_SESSION["user_id"])) {
     header("Location: login.php");
     exit;
 }
 
-// Verify permissions (only the owner can access)
-/*
-if ($_SESSION["role"] !== "owner") {
-    echo "<div style='color:red; font-weight:bold;'>คุณไม่มีสิทธิ์เข้าหน้านี้</div>";
-    exit;
-}
-*/
 if (!in_array($_SESSION["role"], ["owner", "admin"])) {
     echo "<div style='color:red; font-weight:bold;'>คุณไม่มีสิทธิ์เข้าหน้านี้</div>";
     exit;
 }
 
+$owner_id = $_SESSION["user_id"];
+
+$stmt = $conn->prepare("SELECT * FROM hotels WHERE owner_id = ?");
+$stmt->bind_param("i", $owner_id);
+$stmt->execute();
+$hotel = $stmt->get_result()->fetch_assoc() ?: [
+    "hotel_name" => "", "location" => "", "latitude" => null, "longitude" => null,
+    "price" => "", "description" => "", "facilities" => "", "surrounding" => "", "type" => ""
+];
+$stmt->close();
+
+$hasHotel = !empty($hotel['id']);
+
+// ---- Delete hotel ----
 if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST["delete_hotel_id"])) {
-    $delete_id = intval($_POST["delete_hotel_id"]);
-    $owner_id = $_SESSION["user_id"];
+    $delete_id = (int) $_POST["delete_hotel_id"];
 
-    // you owner?
-    $check_sql = "SELECT * FROM hotels WHERE id = ? AND owner_id = ?";
-    $check_stmt = $conn->prepare($check_sql);
-    $check_stmt->bind_param("ii", $delete_id, $owner_id);
-    $check_stmt->execute();
-    $result = $check_stmt->get_result();
+    $check = $conn->prepare("SELECT id FROM hotels WHERE id = ? AND owner_id = ?");
+    $check->bind_param("ii", $delete_id, $owner_id);
+    $check->execute();
 
-    if ($result->num_rows > 0) {
-        // If it's true, delete the hotel
-        $delete_sql = "DELETE FROM hotels WHERE id = ? AND owner_id = ?";
-        $delete_stmt = $conn->prepare($delete_sql);
-        $delete_stmt->bind_param("ii", $delete_id, $owner_id);
-        $delete_stmt->execute();
+    if ($check->get_result()->num_rows > 0) {
+        $del = $conn->prepare("DELETE FROM hotels WHERE id = ? AND owner_id = ?");
+        $del->bind_param("ii", $delete_id, $owner_id);
+        $del->execute();
+        $del->close();
 
-        // Delete images in hotel_images (optional)
-        $delete_img_sql = "DELETE FROM hotel_images WHERE hotel_id = ?";
-        $img_stmt = $conn->prepare($delete_img_sql);
-        $img_stmt->bind_param("i", $delete_id);
-        $img_stmt->execute();
+        $delImg = $conn->prepare("DELETE FROM hotel_images WHERE hotel_id = ?");
+        $delImg->bind_param("i", $delete_id);
+        $delImg->execute();
+        $delImg->close();
 
         echo "<script>alert('ลบโรงแรมเรียบร้อยแล้ว'); window.location.href='manage_hotels.php';</script>";
         exit;
     } else {
         echo "<script>alert('ไม่พบข้อมูลโรงแรมนี้ หรือคุณไม่มีสิทธิ์ลบ');</script>";
     }
+    $check->close();
 }
 
-if ($_SERVER["REQUEST_METHOD"] === "POST") {
-    $hotel_name  = $_POST["hotel_name"] ?? '';
-    $location    = $_POST["location"] ?? '';
-    $price       = $_POST["price"] ?? '';
-    $description = $_POST["description"] ?? '';
-    $facilities = $_POST["facilities"] ?? '';
-    $surrounding = $_POST["surrounding"] ?? '';
-    $type = $_POST["type"] ?? '';
-    $owner_id    = $_SESSION["user_id"];
+// ---- Save hotel (insert or update) ----
+if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST["hotel_name"])) {
+    $hotel_name  = trim($_POST["hotel_name"] ?? '');
+    $location    = trim($_POST["location"] ?? '');
+    $latitude    = ($_POST["latitude"] ?? '') !== '' ? (float) $_POST["latitude"] : null;
+    $longitude   = ($_POST["longitude"] ?? '') !== '' ? (float) $_POST["longitude"] : null;
+    $price       = trim($_POST["price"] ?? '');
+    $description = trim($_POST["description"] ?? '');
+    $facilities  = trim($_POST["facilities"] ?? '');
+    $surrounding = trim($_POST["surrounding"] ?? '');
+    $type        = trim($_POST["type"] ?? '');
 
     if (!empty($hotel_name) && !empty($location) && !empty($price)) {
-        // Check if this hotel is in the db
-        $check_sql = "SELECT id FROM hotels WHERE owner_id = ?";
-        $check_stmt = $conn->prepare($check_sql);
-        $check_stmt->bind_param("i", $owner_id);
-        $check_stmt->execute();
-        $check_result = $check_stmt->get_result();
-
-        if ($check_result->num_rows > 0) {
-            // if have : just update
-            $sql = "UPDATE hotels SET hotel_name = ?, location = ?, price = ?, description = ?, facilities = ?, surrounding = ?, type = ? WHERE owner_id = ?";
-            $stmt = $conn->prepare($sql);
-            $stmt->bind_param("sssssssi", $hotel_name, $location, $price, $description, $facilities, $surrounding, $type, $owner_id);
+        if ($hasHotel) {
+            $stmt = $conn->prepare("UPDATE hotels SET hotel_name=?, location=?, latitude=?, longitude=?, price=?, description=?, facilities=?, surrounding=?, type=? WHERE owner_id=?");
+            $stmt->bind_param("ssddsssssi", $hotel_name, $location, $latitude, $longitude, $price, $description, $facilities, $surrounding, $type, $owner_id);
         } else {
-            // if not have: add one
-            $sql = "INSERT INTO hotels (hotel_name, location, price, description, facilities, surrounding, type, owner_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
-            $stmt = $conn->prepare($sql);
-            $stmt->bind_param("sssssssi", $hotel_name, $location, $price, $description, $facilities, $surrounding, $type, $owner_id);
+            $stmt = $conn->prepare("INSERT INTO hotels (hotel_name, location, latitude, longitude, price, description, facilities, surrounding, type, owner_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+            $stmt->bind_param("ssddsssssi", $hotel_name, $location, $latitude, $longitude, $price, $description, $facilities, $surrounding, $type, $owner_id);
         }
 
         if ($stmt->execute()) {
-            // got ID โรงแรม
-            $hotel_id = ($check_result->num_rows > 0)
-                ? $check_result->fetch_assoc()["id"]
-                : $conn->insert_id;
+            $hotel_id = $hasHotel ? $hotel["id"] : $conn->insert_id;
 
-            // uoload image
-            if (isset($_FILES["hotel_images"])) {
-                $upload_dir = __DIR__ . "/uploads/hotels/"; // absolute path real
-                $relative_dir = "uploads/hotels/";          // path on web
+            if (!empty($_POST["cropped_hotel_images_json"])) {
+                $croppedImages = json_decode($_POST["cropped_hotel_images_json"], true) ?: [];
+                $destDir = __DIR__ . "/uploads/hotels/";
+                $relDir  = "uploads/hotels/";
 
-                if (!is_dir($upload_dir)) {
-                    mkdir($upload_dir, 0777, true);
-                }
-
-                foreach ($_FILES['hotel_images']['tmp_name'] as $index => $tmp_name) {
-                    if ($_FILES['hotel_images']['error'][$index] === UPLOAD_ERR_OK) {
-                        $original_name = basename($_FILES['hotel_images']['name'][$index]);
-                        $ext = pathinfo($original_name, PATHINFO_EXTENSION);
-                        $new_name = uniqid("hotel_") . "." . $ext;
-
-                        $destination = $upload_dir . $new_name;   // path for full file
-                        $relative_path = $relative_dir . $new_name; // path in to the DB
-
-                        if (move_uploaded_file($tmp_name, $destination)) {
-                            $img_sql = "INSERT INTO hotel_images (hotel_id, image_path) VALUES (?, ?)";
-                            $img_stmt = $conn->prepare($img_sql);
-                            $img_stmt->bind_param("is", $hotel_id, $relative_path);
-                            $img_stmt->execute();
-                            $img_stmt->close();
-                        } else {
-                            echo "<div style='color:red'>Upload failed: $original_name</div>";
-                        }
+                foreach ($croppedImages as $dataUrl) {
+                    $filename = save_cropped_image($dataUrl, $destDir, "hotel");
+                    if ($filename !== false) {
+                        $rel = $relDir . $filename;
+                        $img = $conn->prepare("INSERT INTO hotel_images (hotel_id, image_path) VALUES (?, ?)");
+                        $img->bind_param("is", $hotel_id, $rel);
+                        $img->execute();
+                        $img->close();
                     }
                 }
             }
 
-            // redirect af all done
             header("Location: manage_hotels.php?success=1");
             exit;
         } else {
-            echo "<div class='alert alert-danger'>เกิดข้อผิดพลาด: " . $stmt->error . "</div>";
+            $saveError = "เกิดข้อผิดพลาด: " . $stmt->error;
         }
-
         $stmt->close();
-        $check_stmt->close();
     } else {
-        echo "<div class='alert alert-danger'>กรุณากรอกข้อมูลให้ครบ</div>";
+        $saveError = "กรุณากรอกข้อมูลให้ครบ (ชื่อโรงแรม, ที่ตั้ง, ราคา)";
     }
 }
 
-$hotel = [
-    "hotel_name" => "",
-    "location" => "",
-    "price" => "",
-    "description" => "",
-    "facilities" => "",
-    "surrounding" => "",
-    "type" => ""
-];
+// ---- Save room type (insert or update) ----
+if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST["room_name"]) && $hasHotel) {
+    $room_type_id   = (int) ($_POST["room_type_id"] ?? 0);
+    $room_name      = trim($_POST["room_name"] ?? '');
+    $capacity       = (int) ($_POST["capacity"] ?? 0);
+    $price_per_night = trim($_POST["price_per_night"] ?? '');
+    $quantity       = (int) ($_POST["quantity"] ?? 0);
+    $room_description = trim($_POST["room_description"] ?? '');
+    $amenities      = trim($_POST["amenities"] ?? '');
 
-//โหลดเฉลาะข้อมูล user คนๆ นั้น
-$owner_id = $_SESSION["user_id"];
-$sql = "SELECT * FROM hotels WHERE owner_id = ?";
-$stmt = $conn->prepare($sql);
-$stmt->bind_param("i", $owner_id);
-$stmt->execute();
-$result = $stmt->get_result();
+    if (!empty($room_name) && $capacity > 0 && $price_per_night !== '' && $quantity > 0) {
+        if ($room_type_id > 0) {
+            // Verify this room type actually belongs to this owner's hotel
+            $own = $conn->prepare("SELECT rt.id FROM room_types rt JOIN hotels h ON h.id = rt.hotel_id WHERE rt.id = ? AND h.owner_id = ?");
+            $own->bind_param("ii", $room_type_id, $owner_id);
+            $own->execute();
+            $owns = $own->get_result()->num_rows > 0;
+            $own->close();
 
-if ($result->num_rows > 0) {
-    $hotel = $result->fetch_assoc();
+            if ($owns) {
+                $stmt = $conn->prepare("UPDATE room_types SET room_name=?, capacity=?, price_per_night=?, quantity=?, description=?, amenities=? WHERE id=?");
+                $stmt->bind_param("sidsssi", $room_name, $capacity, $price_per_night, $quantity, $room_description, $amenities, $room_type_id);
+                $stmt->execute();
+                $stmt->close();
+            }
+        } else {
+            $stmt = $conn->prepare("INSERT INTO room_types (hotel_id, room_name, capacity, price_per_night, quantity, description, amenities) VALUES (?, ?, ?, ?, ?, ?, ?)");
+            $stmt->bind_param("isidsss", $hotel["id"], $room_name, $capacity, $price_per_night, $quantity, $room_description, $amenities);
+            $stmt->execute();
+            $room_type_id = $conn->insert_id;
+            $stmt->close();
+        }
+
+        if ($room_type_id > 0 && !empty($_POST["cropped_images_json"])) {
+            $croppedImages = json_decode($_POST["cropped_images_json"], true) ?: [];
+            $destDir = __DIR__ . "/uploads/rooms/";
+            $relDir  = "uploads/rooms/";
+
+            foreach ($croppedImages as $dataUrl) {
+                $filename = save_cropped_image($dataUrl, $destDir, "room");
+                if ($filename !== false) {
+                    $rel = $relDir . $filename;
+                    $img = $conn->prepare("INSERT INTO room_images (room_type_id, image_path) VALUES (?, ?)");
+                    $img->bind_param("is", $room_type_id, $rel);
+                    $img->execute();
+                    $img->close();
+                }
+            }
+        }
+
+        header("Location: manage_hotels.php?room_success=1");
+        exit;
+    } else {
+        $roomError = "กรุณากรอกข้อมูลห้องพักให้ครบ (ชื่อห้อง, จำนวนผู้เข้าพัก, ราคา, จำนวนห้อง)";
+    }
 }
 
-$stmt->close();
+// ---- Delete room type ----
+if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST["delete_room_id"])) {
+    $del_room_id = (int) $_POST["delete_room_id"];
+
+    $own = $conn->prepare("SELECT rt.id FROM room_types rt JOIN hotels h ON h.id = rt.hotel_id WHERE rt.id = ? AND h.owner_id = ?");
+    $own->bind_param("ii", $del_room_id, $owner_id);
+    $own->execute();
+    $owns = $own->get_result()->num_rows > 0;
+    $own->close();
+
+    if ($owns) {
+        $imgs = $conn->prepare("SELECT image_path FROM room_images WHERE room_type_id = ?");
+        $imgs->bind_param("i", $del_room_id);
+        $imgs->execute();
+        $imgRows = $imgs->get_result()->fetch_all(MYSQLI_ASSOC);
+        $imgs->close();
+
+        foreach ($imgRows as $row) {
+            $path = __DIR__ . "/" . $row['image_path'];
+            if (is_file($path)) {
+                unlink($path);
+            }
+        }
+
+        $del = $conn->prepare("DELETE FROM room_types WHERE id = ?");
+        $del->bind_param("i", $del_room_id);
+        $del->execute();
+        $del->close();
+    }
+
+    header("Location: manage_hotels.php");
+    exit;
+}
+
+// ---- Delete a single room image ----
+if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST["delete_room_image_id"])) {
+    $del_image_id = (int) $_POST["delete_room_image_id"];
+    $edit_room_after = (int) ($_POST["edit_room_after"] ?? 0);
+
+    $own = $conn->prepare("
+        SELECT ri.id, ri.image_path
+        FROM room_images ri
+        JOIN room_types rt ON rt.id = ri.room_type_id
+        JOIN hotels h ON h.id = rt.hotel_id
+        WHERE ri.id = ? AND h.owner_id = ?
+    ");
+    $own->bind_param("ii", $del_image_id, $owner_id);
+    $own->execute();
+    $imgRow = $own->get_result()->fetch_assoc();
+    $own->close();
+
+    if ($imgRow) {
+        $path = __DIR__ . "/" . $imgRow['image_path'];
+        if (is_file($path)) {
+            unlink($path);
+        }
+        $del = $conn->prepare("DELETE FROM room_images WHERE id = ?");
+        $del->bind_param("i", $del_image_id);
+        $del->execute();
+        $del->close();
+    }
+
+    header("Location: manage_hotels.php" . ($edit_room_after > 0 ? "?edit_room={$edit_room_after}" : ""));
+    exit;
+}
+
+// ---- Delete a single hotel image ----
+if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST["delete_hotel_image_id"]) && $hasHotel) {
+    $del_himg_id = (int) $_POST["delete_hotel_image_id"];
+
+    $own = $conn->prepare("SELECT id, image_path FROM hotel_images WHERE id = ? AND hotel_id = ?");
+    $own->bind_param("ii", $del_himg_id, $hotel["id"]);
+    $own->execute();
+    $imgRow = $own->get_result()->fetch_assoc();
+    $own->close();
+
+    if ($imgRow) {
+        $path = __DIR__ . "/" . $imgRow['image_path'];
+        if (is_file($path)) {
+            unlink($path);
+        }
+        $del = $conn->prepare("DELETE FROM hotel_images WHERE id = ?");
+        $del->bind_param("i", $del_himg_id);
+        $del->execute();
+        $del->close();
+    }
+
+    header("Location: manage_hotels.php");
+    exit;
+}
+
+// ---- Load existing hotel images for display ----
+$hotelImages = [];
+if ($hasHotel) {
+    $hi = $conn->prepare("SELECT id, image_path FROM hotel_images WHERE hotel_id = ? ORDER BY id ASC");
+    $hi->bind_param("i", $hotel["id"]);
+    $hi->execute();
+    $hotelImages = $hi->get_result()->fetch_all(MYSQLI_ASSOC);
+    $hi->close();
+}
+
+// ---- Load room types for display ----
+$roomTypes = [];
+if ($hasHotel) {
+    $rt = $conn->prepare("SELECT * FROM room_types WHERE hotel_id = ? ORDER BY id DESC");
+    $rt->bind_param("i", $hotel["id"]);
+    $rt->execute();
+    $roomTypes = $rt->get_result()->fetch_all(MYSQLI_ASSOC);
+    $rt->close();
+
+    foreach ($roomTypes as &$room) {
+        $ri = $conn->prepare("SELECT id, image_path FROM room_images WHERE room_type_id = ? ORDER BY id ASC");
+        $ri->bind_param("i", $room["id"]);
+        $ri->execute();
+        $room["images"] = $ri->get_result()->fetch_all(MYSQLI_ASSOC);
+        $ri->close();
+    }
+    unset($room);
+}
+
+// ---- Editing an existing room type? ----
+$editingRoom = null;
+if (isset($_GET["edit_room"])) {
+    $edit_id = (int) $_GET["edit_room"];
+    foreach ($roomTypes as $room) {
+        if ((int) $room["id"] === $edit_id) {
+            $editingRoom = $room;
+            break;
+        }
+    }
+}
 ?>
-
-<?php if (isset($_GET["success"])): ?>
-    <div class="alert alert-success">บันทึกโรงแรมเรียบร้อยแล้ว</div>
-<?php endif; ?>
-
 <!DOCTYPE html>
 <html lang="th">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>เพิ่มหรือแก้ไขโรงแรมใหม่</title>
+    <title>เพิ่มหรือแก้ไขโรงแรม</title>
     <link rel="icon" type="image/png" href="image/hotel-icon-coupon-codes-hotel.png">
-    <link rel="stylesheet" href="style2.css?v=1.5">
+    <link rel="stylesheet" href="assets/css/style2.css?v=<?= filemtime(__DIR__ . '/assets/css/style2.css') ?>">
     <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@400;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.1/cropper.min.css">
 </head>
 <body>
-    <header class="navbar">
-        <div class="container">
-            <div class="logo">
-                <img src="image\hotel-icon-coupon-codes-hotel.png" alt="Logo">
-            </div>
-            <nav class="nav-links">
-                <a href="index.php">Home</a>
-                <a href="hotel.php">Hotel</a>
-                <a href="contact.php">Contact</a>
-            </nav>
-            <div class="auth-links">
-            <?php if (!isset($_SESSION["user"])): ?>
-                <a href="register.php" class="btn-signup">สมัครสมาชิก</a>
-                <a href="login.php" class="btn-signup">เข้าสู่ระบบ</a>
-            <?php else: ?>
-                <div class="profile-menu">
-                    <div class="profile-icon" onclick="toggleMenu()">
-                        <img src="uploads/<?= $_SESSION["profile_picture"] ?? 'default.jpg' ?>" alt="Profile">
-                        <span><?= $_SESSION["user"] ?></span>
-                    </div>
-                    <div class="dropdown-menu" id="dropdownMenu">
-                        <a href="edit_profile.php">แก้ไขโปรไฟล์</a>
-                        <?php if ($_SESSION["role"] === "owner" || $_SESSION["role"] === "admin"): ?>
-                            <?php
-                                $owner_id = $_SESSION["user_id"];
-                                $check_sql = "SELECT id FROM hotels WHERE owner_id = ?";
-                                $check_stmt = $conn->prepare($check_sql);
-                                $check_stmt->bind_param("i", $owner_id);
-                                $check_stmt->execute();
-                                $check_result = $check_stmt->get_result();
-                                $hasHotel = $check_result->num_rows > 0;
-                                $check_stmt->close();
-                            ?>
-                            <a href="manage_hotels.php">
-                                <?= $hasHotel ? "แก้ไขโรงแรม" : "เพิ่มโรงแรม" ?>
-                            </a>
-                        <?php endif; ?>
 
-                        <?php if ($_SESSION["role"] === "admin"): ?>
-                            <a href="admin_manage.php">จัดการระบบ</a>
-                        <?php endif; ?>
+<?php require_once "includes/header.php"; ?>
 
-                        <a href="board.php">ดูการจองโรงแรม</a>
-                        <a href="logout.php">ออกจากระบบ</a>
+<div class="wide-page-container">
+    <div class="wide-form-card">
+        <h2>โรงแรมของคุณ</h2>
+
+        <?php if (isset($_GET["success"])): ?>
+            <div class="alert alert-success">บันทึกโรงแรมเรียบร้อยแล้ว</div>
+        <?php endif; ?>
+        <?php if (isset($_GET["room_success"])): ?>
+            <div class="alert alert-success">บันทึกห้องพักเรียบร้อยแล้ว</div>
+        <?php endif; ?>
+        <?php if (!empty($saveError)): ?>
+            <div class="alert alert-danger"><?= htmlspecialchars($saveError) ?></div>
+        <?php endif; ?>
+
+        <form action="manage_hotels.php" method="post" enctype="multipart/form-data">
+            <div class="field-row">
+                <div class="field-group">
+                    <label>ชื่อโรงแรม</label>
+                    <div class="field-wrap">
+                        <span class="field-icon">🏨</span>
+                        <input type="text" name="hotel_name" placeholder="ชื่อโรงแรม"
+                               value="<?= htmlspecialchars($hotel["hotel_name"]) ?>">
                     </div>
                 </div>
-            <?php endif; ?>
-            </div>
-        </div>
-    </header>
-
-    <div class="form-container">
-        <div class="form-card">
-            <h2>โรงแรมของคุณ</h2>
-            <form action="manage_hotels.php" method="post" enctype="multipart/form-data">
-                <input type="text" name="hotel_name" placeholder="ชื่อโรงแรม" value="<?= htmlspecialchars($hotel["hotel_name"])?>">
-                <input type="text" name="location" placeholder="ที่ตั้ง" value="<?= htmlspecialchars($hotel["location"])?>">
-                <input type="text" name="price" placeholder="ราคาต่อคืน (บาท)" value="<?= htmlspecialchars($hotel["price"])?>">
-                <input type="text" name="description" placeholder="รายละเอียด" value="<?= htmlspecialchars($hotel["description"])?>">
-                <input type="text" name="facilities" placeholder="สิ่งอำนวยความสะดวก" value="<?= htmlspecialchars($hotel["facilities"])?>">
-                <input type="text" name="surrounding" placeholder="บริเวณโดยรอบ" value="<?= htmlspecialchars($hotel["surrounding"])?>">
-                <!--
-                <div class="custom-select-wrapper">
-                    <div class="custom-select" id="hotelTypeSelect">
-                        <div class="custom-select-trigger">
-                            <?= !empty($hotel["type"]) ? htmlspecialchars($hotel["type"]) : "-- เลือกประเภทโรงแรม --" ?>
-                        </div>
-                        <div class="custom-options">
-                            <span class="custom-option <?= ($hotel["type"] == "โรงแรมราคาประหยัด") ? "selected" : "" ?>" data-value="Budget">ราคาประหยัด</span>
-                            <span class="custom-option <?= ($hotel["type"] == "โรงแรมหรู") ? "selected" : "" ?>" data-value="Luxury">หรู</span>
-                            <span class="custom-option <?= ($hotel["type"] == "โรงแรมครอบครัว") ? "selected" : "" ?>" data-value="Family">ครอบครัว</span>
-                        </div>
-                        
+                <div class="field-group">
+                    <label>ราคาต่อคืน (บาท)</label>
+                    <div class="field-wrap">
+                        <span class="field-icon">฿</span>
+                        <input type="text" name="price" placeholder="ราคาต่อคืน (บาท)"
+                               value="<?= htmlspecialchars($hotel["price"]) ?>">
                     </div>
-                    -->
-                    <!-- hidden input เอาไว้ส่งค่าไป PHP -->
-                     <!--
-                    <input type="hidden" name="type" id="hotelTypeInput" value="<?= htmlspecialchars($hotel["type"]) ?>">
                 </div>
-                -->
-                <label>อัปโหลดรูปภาพโรงแรม:</label>
-                <input type="file" name="hotel_images[]" multiple accept="image/*">
-                <button type="submit">บันทึกข้อมูล</button>
-            </form>
-            <form method="POST" action="manage_hotels.php" onsubmit="return confirm('คุณแน่ใจหรือไม่ว่าต้องการลบโรงแรมนี้?');">
-                <?php if (!empty($hotel['id'])): ?>
-                    <input type="hidden" name="delete_hotel_id" value="<?= htmlspecialchars($hotel['id']) ?>">
-                    <button type="submit" class="btn btn-danger">ลบ</button>
-                <?php else: ?>
-                    <p style="color:gray;">ยังไม่มีโรงแรมให้ลบ</p>
+            </div>
+
+            <div class="field-group">
+                <label>ที่ตั้ง</label>
+                <div class="field-wrap">
+                    <span class="field-icon">📍</span>
+                    <input type="text" name="location" id="locationInput" placeholder="ที่ตั้ง"
+                           value="<?= htmlspecialchars($hotel["location"]) ?>">
+                </div>
+            </div>
+
+            <div class="map-card">
+                <div class="map-search-row">
+                    <div class="field-wrap">
+                        <span class="field-icon">🔍</span>
+                        <input type="text" id="mapSearch" placeholder="พิมพ์ชื่อสถานที่หรือที่อยู่ เช่น มอ.ปัตตานี">
+                    </div>
+                </div>
+                <span class="field-hint">
+                    1) พิมพ์ชื่อสถานที่หรือที่อยู่ในช่องด้านบน แล้วกด Enter เพื่อค้นหา<br>
+                    2) แผนที่จะเลื่อนไปตำแหน่งที่พบและปักหมุดให้อัตโนมัติ<br>
+                    3) คลิกหรือลากหมุดบนแผนที่เพื่อปรับตำแหน่งให้ตรงจุดจริง
+                </span>
+                <div id="hotelMap" class="leaflet-map-container"></div>
+                <input type="hidden" name="latitude" id="latitudeInput" value="<?= htmlspecialchars($hotel["latitude"] ?? '') ?>">
+                <input type="hidden" name="longitude" id="longitudeInput" value="<?= htmlspecialchars($hotel["longitude"] ?? '') ?>">
+            </div>
+
+            <div class="field-group">
+                <label>รายละเอียด</label>
+                <div class="field-wrap">
+                    <span class="field-icon">📝</span>
+                    <input type="text" name="description" placeholder="รายละเอียด"
+                           value="<?= htmlspecialchars($hotel["description"]) ?>">
+                </div>
+            </div>
+            <div class="field-group">
+                <label>สิ่งอำนวยความสะดวก (คั่นด้วย ,)</label>
+                <div class="field-wrap">
+                    <span class="field-icon">🛎</span>
+                    <input type="text" name="facilities" placeholder="สิ่งอำนวยความสะดวก (คั่นด้วย ,)"
+                           value="<?= htmlspecialchars($hotel["facilities"]) ?>">
+                </div>
+            </div>
+            <div class="field-group">
+                <label>บริเวณโดยรอบ (คั่นด้วย ,)</label>
+                <div class="field-wrap">
+                    <span class="field-icon">🗺</span>
+                    <input type="text" name="surrounding" placeholder="บริเวณโดยรอบ (คั่นด้วย ,)"
+                           value="<?= htmlspecialchars($hotel["surrounding"]) ?>">
+                </div>
+            </div>
+            <div class="field-group">
+                <label>รูปภาพโรงแรม</label>
+                <?php if (!empty($hotelImages)): ?>
+                <div class="room-thumb-strip" style="margin-bottom:12px;">
+                    <?php foreach ($hotelImages as $img): ?>
+                        <div class="room-thumb">
+                            <img src="<?= htmlspecialchars($img['image_path']) ?>" alt="hotel image">
+                            <button type="submit" form="delHotelImg<?= (int) $img['id'] ?>"
+                                    class="room-thumb-remove">×</button>
+                        </div>
+                    <?php endforeach; ?>
+                </div>
                 <?php endif; ?>
-            </form>
-            <p><a href="index.php">กลับหน้าหลัก</a></p>
+                <div class="room-upload-dropzone" id="hotelDropzone">📷 คลิกเพื่อเลือกรูปภาพ (เลือกได้หลายรูป พร้อมครอบตัด)</div>
+                <input type="file" id="hotelFileInput" accept="image/*" multiple style="display:none">
+                <div class="room-thumb-strip" id="hotelThumbStrip"></div>
+                <input type="hidden" name="cropped_hotel_images_json" id="croppedHotelImagesJson">
+            </div>
+
+            <button type="submit" class="auth-btn"><?= $hasHotel ? "บันทึกข้อมูล" : "เพิ่มโรงแรม" ?></button>
+        </form>
+
+        <?php foreach ($hotelImages as $img): ?>
+        <form method="post" id="delHotelImg<?= (int) $img['id'] ?>" data-confirm="ลบรูปนี้ใช่หรือไม่?">
+            <input type="hidden" name="delete_hotel_image_id" value="<?= (int) $img['id'] ?>">
+        </form>
+        <?php endforeach; ?>
+
+        <form method="POST" action="manage_hotels.php" data-confirm="คุณแน่ใจหรือไม่ว่าต้องการลบโรงแรมนี้?">
+            <?php if ($hasHotel): ?>
+                <input type="hidden" name="delete_hotel_id" value="<?= htmlspecialchars($hotel['id']) ?>">
+                <button type="submit" class="btn btn-danger" style="margin-top:10px;">ลบโรงแรม</button>
+            <?php endif; ?>
+        </form>
+
+        <?php if ($hasHotel): ?>
+        <h3 class="section-title">ห้องพัก</h3>
+
+        <?php if (!empty($roomError)): ?>
+            <div class="alert alert-danger"><?= htmlspecialchars($roomError) ?></div>
+        <?php endif; ?>
+
+        <?php if (!empty($roomTypes)): ?>
+        <div class="room-type-grid" style="margin-bottom:28px;">
+            <?php foreach ($roomTypes as $room):
+                $isEditingThis = $editingRoom && (int) $editingRoom['id'] === (int) $room['id'];
+            ?>
+                <div class="room-type-card<?= $isEditingThis ? ' editing-room' : '' ?>">
+                    <?php if ($isEditingThis): ?>
+                        <span class="editing-badge">✏ กำลังแก้ไข</span>
+                    <?php endif; ?>
+                    <img src="<?= htmlspecialchars($room['images'][0]['image_path'] ?? 'image/641151494.jpg') ?>" alt="<?= htmlspecialchars($room['room_name']) ?>">
+                    <div class="card-content">
+                        <h4><?= htmlspecialchars($room['room_name']) ?></h4>
+                        <span class="capacity-badge">👤 x <?= (int) $room['capacity'] ?></span>
+                        <span>เหลือ <?= (int) $room['quantity'] ?> ห้อง</span>
+                        <span class="room-price">฿<?= htmlspecialchars($room['price_per_night']) ?> / คืน</span>
+                        <div class="room-actions">
+                            <a href="manage_hotels.php?edit_room=<?= (int) $room['id'] ?>" class="btn-edit-room">แก้ไข</a>
+                            <form method="post" style="flex:1;" data-confirm="ลบห้องพัก &quot;<?= htmlspecialchars($room['room_name'], ENT_QUOTES) ?>&quot; ใช่หรือไม่?">
+                                <input type="hidden" name="delete_room_id" value="<?= (int) $room['id'] ?>">
+                                <button type="submit" class="btn-delete-room">ลบ</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            <?php endforeach; ?>
+        </div>
+        <?php endif; ?>
+
+        <h3 class="section-title" id="roomFormAnchor">
+            <?= $editingRoom ? "แก้ไขห้องพัก: " . htmlspecialchars($editingRoom['room_name']) : "เพิ่มห้องพัก" ?>
+        </h3>
+        <form method="post" id="roomForm" class="<?= $editingRoom ? 'editing-room-form' : '' ?>">
+            <input type="hidden" name="room_type_id" value="<?= $editingRoom ? (int) $editingRoom['id'] : '' ?>">
+
+            <div class="field-row">
+                <div class="field-group">
+                    <label>ชื่อห้อง</label>
+                    <div class="field-wrap">
+                        <span class="field-icon">🛏</span>
+                        <input type="text" name="room_name" placeholder="เช่น ห้องมาตรฐาน เตียงคู่"
+                               value="<?= htmlspecialchars($editingRoom['room_name'] ?? '') ?>">
+                    </div>
+                </div>
+                <div class="field-group">
+                    <label>จำนวนผู้เข้าพักสูงสุด</label>
+                    <div class="field-wrap">
+                        <span class="field-icon">👤</span>
+                        <input type="number" name="capacity" min="1" placeholder="เช่น 2"
+                               value="<?= htmlspecialchars($editingRoom['capacity'] ?? '') ?>">
+                    </div>
+                </div>
+            </div>
+
+            <div class="field-row">
+                <div class="field-group">
+                    <label>ราคาต่อคืน (บาท)</label>
+                    <div class="field-wrap">
+                        <span class="field-icon">฿</span>
+                        <input type="number" step="0.01" name="price_per_night" placeholder="เช่น 1200"
+                               value="<?= htmlspecialchars($editingRoom['price_per_night'] ?? '') ?>">
+                    </div>
+                </div>
+                <div class="field-group">
+                    <label>จำนวนห้องทั้งหมด</label>
+                    <div class="field-wrap">
+                        <span class="field-icon">🔢</span>
+                        <input type="number" name="quantity" min="1" placeholder="เช่น 5"
+                               value="<?= htmlspecialchars($editingRoom['quantity'] ?? '') ?>">
+                    </div>
+                </div>
+            </div>
+
+            <div class="field-group">
+                <label>รายละเอียดห้อง</label>
+                <div class="field-wrap">
+                    <span class="field-icon">📝</span>
+                    <input type="text" name="room_description" placeholder="รายละเอียดห้องพัก"
+                           value="<?= htmlspecialchars($editingRoom['description'] ?? '') ?>">
+                </div>
+            </div>
+            <div class="field-group">
+                <label>สิ่งอำนวยความสะดวกในห้อง (คั่นด้วย ,)</label>
+                <div class="field-wrap">
+                    <span class="field-icon">🛎</span>
+                    <input type="text" name="amenities" placeholder="เช่น แอร์, ทีวี, ตู้เย็น"
+                           value="<?= htmlspecialchars($editingRoom['amenities'] ?? '') ?>">
+                </div>
+            </div>
+
+            <?php if ($editingRoom && !empty($editingRoom['images'])): ?>
+            <div class="field-group">
+                <label>รูปภาพปัจจุบัน</label>
+                <div class="room-thumb-strip">
+                    <?php foreach ($editingRoom['images'] as $img): ?>
+                        <div class="room-thumb">
+                            <img src="<?= htmlspecialchars($img['image_path']) ?>" alt="room image">
+                            <button type="submit" form="delRoomImg<?= (int) $img['id'] ?>"
+                                    class="room-thumb-remove">×</button>
+                        </div>
+                    <?php endforeach; ?>
+                </div>
+            </div>
+            <?php endif; ?>
+
+            <div class="field-group">
+                <label>เพิ่มรูปภาพห้องพัก (เลือกได้หลายรูป พร้อมครอบตัด)</label>
+                <div class="room-upload-dropzone" id="roomDropzone">📷 คลิกเพื่อเลือกรูปภาพ</div>
+                <input type="file" id="roomFileInput" accept="image/*" multiple style="display:none">
+                <div class="room-thumb-strip" id="roomThumbStrip"></div>
+                <input type="hidden" name="cropped_images_json" id="croppedImagesJson">
+            </div>
+
+            <button type="submit" class="auth-btn"><?= $editingRoom ? "บันทึกห้องพัก" : "เพิ่มห้องพัก" ?></button>
+            <?php if ($editingRoom): ?>
+                <a href="manage_hotels.php" class="profile-back-link" style="display:block; margin-top:10px;">ยกเลิกการแก้ไข</a>
+            <?php endif; ?>
+        </form>
+
+        <?php if ($editingRoom): foreach ($editingRoom['images'] as $img): ?>
+        <form method="post" id="delRoomImg<?= (int) $img['id'] ?>" data-confirm="ลบรูปนี้ใช่หรือไม่?">
+            <input type="hidden" name="delete_room_image_id" value="<?= (int) $img['id'] ?>">
+            <input type="hidden" name="edit_room_after" value="<?= (int) $editingRoom['id'] ?>">
+        </form>
+        <?php endforeach; endif; ?>
+        <?php endif; ?>
+
+        <p><a href="index.php">กลับหน้าหลัก</a></p>
+    </div>
+</div>
+
+<!-- Shared image crop modal (used for both hotel and room photos) -->
+<div id="imageCropModal" class="crop-modal" style="display:none">
+    <div class="crop-modal-box">
+        <div class="crop-modal-header">
+            <h3>✂️ ครอบตัดรูปภาพ</h3>
+            <button type="button" class="crop-close-btn" id="cropClose2">✕</button>
+        </div>
+        <div class="crop-canvas-wrap">
+            <img id="cropImage2" src="" alt="crop">
+        </div>
+        <div class="crop-resolution-row">
+            <label for="cropResolution">ขนาดรูปภาพที่ต้องการ:</label>
+            <select id="cropResolution">
+                <option value="1280x720" selected>720p (1280x720)</option>
+                <option value="1600x900">900p (1600x900)</option>
+                <option value="1920x1080">1080p (1920x1080)</option>
+                <option value="2560x1440">1440p (2560x1440)</option>
+            </select>
+        </div>
+        <div class="crop-modal-footer">
+            <button type="button" class="crop-btn-cancel" id="cropCancel2">ข้ามรูปนี้</button>
+            <button type="button" class="crop-btn-confirm" id="cropConfirm2">✓ ยืนยันการครอบ</button>
         </div>
     </div>
+</div>
 
-    <!-- just my under1 -->
-
-    <footer class="footer">
-        <div class="container">
-            <div class="footer-content">
-                <div class="footer-logo">
-                    <img src="image\hotel-icon-coupon-codes-hotel.png" alt="Footer Logo">
-                </div>
-                <p>© 2025 PNVC, นายครรชิดพล เพ็งเอียด</p>
-                <div class="social-icons">
-                    <a href="https://x.com/FGgez777"><img src="image\twwokX.png" alt="Twitter_X"></a>
-                    <a href="https://www.instagram.com/face.2339/?igsh=dWh6eGtmbjVpanRt"><img src="image\insatagem.png" alt="Instagram"></a>
-                    <a href="https://www.facebook.com/face.pengeid/"><img src="image\fackbookicon.png" alt="Facebook"></a>
-                </div>
-            </div>
+<!-- Shared confirm-delete modal (replaces native browser confirm()) -->
+<div id="confirmModal" class="crop-modal" style="display:none">
+    <div class="crop-modal-box confirm-modal-box">
+        <div class="crop-modal-header">
+            <h3>ยืนยันการลบ</h3>
         </div>
-    </footer>
-</body>
-</html>
+        <div class="confirm-modal-message" id="confirmMessage"></div>
+        <div class="crop-modal-footer">
+            <button type="button" class="crop-btn-cancel" id="confirmCancelBtn">ยกเลิก</button>
+            <button type="button" class="crop-btn-confirm confirm-btn-danger" id="confirmOkBtn">ลบ</button>
+        </div>
+    </div>
+</div>
+
+<?php require_once "includes/footer.php"; ?>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.1/cropper.min.js"></script>
 <script>
-function toggleMenu() {
-    const menu = document.getElementById("dropdownMenu");
-    menu.style.display = (menu.style.display === "block") ? "none" : "block";
-}
-document.addEventListener('click', function(event) {
-    const menu = document.getElementById("dropdownMenu");
-    const profileIcon = document.querySelector('.profile-icon');
-    if (menu && !profileIcon.contains(event.target)) {
-        menu.style.display = "none";
+document.addEventListener("DOMContentLoaded", function () {
+    <?php if ($editingRoom): ?>
+    // Jump straight to the edit form so it's obvious which room is being edited,
+    // instead of leaving the owner to scroll down and guess.
+    var roomAnchor = document.getElementById('roomFormAnchor');
+    if (roomAnchor) roomAnchor.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    <?php endif; ?>
+
+    // ---- Leaflet map ----
+    var startLat = <?= $hotel["latitude"] ? (float) $hotel["latitude"] : 6.8692 ?>;
+    var startLng = <?= $hotel["longitude"] ? (float) $hotel["longitude"] : 101.2504 ?>;
+    var hasPin   = <?= ($hotel["latitude"] && $hotel["longitude"]) ? "true" : "false" ?>;
+
+    var map = L.map('hotelMap').setView([startLat, startLng], hasPin ? 15 : 12);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '&copy; OpenStreetMap contributors'
+    }).addTo(map);
+
+    var marker = L.marker([startLat, startLng], { draggable: true }).addTo(map);
+
+    var latInput = document.getElementById('latitudeInput');
+    var lngInput = document.getElementById('longitudeInput');
+
+    function setPin(lat, lng) {
+        marker.setLatLng([lat, lng]);
+        latInput.value = lat;
+        lngInput.value = lng;
     }
-});
-</script>
 
-<script>
-document.addEventListener("DOMContentLoaded", () => {
-    const customSelect = document.querySelector(".custom-select");
-    const trigger = customSelect.querySelector(".custom-select-trigger");
-    const options = customSelect.querySelectorAll(".custom-option");
-    const hiddenInput = document.getElementById("hotelTypeInput");
+    if (hasPin) setPin(startLat, startLng);
 
-    // toggle dropdown
-    trigger.addEventListener("click", () => {
-        customSelect.classList.toggle("open");
+    marker.on('dragend', function () {
+        var pos = marker.getLatLng();
+        setPin(pos.lat, pos.lng);
     });
 
-    // เลือก option
-    options.forEach(option => {
-        option.addEventListener("click", () => {
-            // set text
-            trigger.textContent = option.textContent;
-            // set value hidden input
-            hiddenInput.value = option.dataset.value;
+    map.on('click', function (e) {
+        setPin(e.latlng.lat, e.latlng.lng);
+    });
 
-            // clear old selection
-            options.forEach(o => o.classList.remove("selected"));
-            option.classList.add("selected");
+    // Nominatim address search (OpenStreetMap free geocoder — fine at low volume,
+    // avoid heavy/production-scale use per their usage policy).
+    var mapSearch = document.getElementById('mapSearch');
+    mapSearch.addEventListener('keydown', function (e) {
+        if (e.key !== 'Enter') return;
+        e.preventDefault();
+        var q = mapSearch.value.trim();
+        if (!q) return;
+        fetch('https://nominatim.openstreetmap.org/search?format=json&q=' + encodeURIComponent(q))
+            .then(res => res.json())
+            .then(results => {
+                if (!results.length) { alert('ไม่พบสถานที่นี้'); return; }
+                var lat = parseFloat(results[0].lat);
+                var lng = parseFloat(results[0].lon);
+                map.setView([lat, lng], 15);
+                setPin(lat, lng);
+            })
+            .catch(() => alert('ค้นหาที่อยู่ไม่สำเร็จ'));
+    });
 
-            // close dropdown
-            customSelect.classList.remove("open");
+    // ---- Shared crop modal + resolution selector, used by both the hotel and
+    // room image uploaders below. Only one queue can be "active" at a time. ----
+    var cropModal      = document.getElementById('imageCropModal');
+    var cropImageEl    = document.getElementById('cropImage2');
+    var cropResolution = document.getElementById('cropResolution');
+    var cropper        = null;
+    var activeUploader  = null;
+
+    function makeImageUploader(dropzoneId, fileInputId, thumbStripId, jsonInputId) {
+        var dropzone   = document.getElementById(dropzoneId);
+        var fileInput  = document.getElementById(fileInputId);
+        var thumbStrip = document.getElementById(thumbStripId);
+        var jsonInput  = document.getElementById(jsonInputId);
+        if (!dropzone) return null;
+
+        var pendingFiles = [];
+        var croppedResults = [];
+
+        dropzone.addEventListener('click', () => fileInput.click());
+
+        fileInput.addEventListener('change', function () {
+            pendingFiles = Array.from(this.files);
+            activeUploader = uploader;
+            processNextFile();
+            fileInput.value = "";
         });
+
+        function processNextFile() {
+            if (pendingFiles.length === 0) {
+                renderThumbStrip();
+                return;
+            }
+            var file = pendingFiles.shift();
+            var reader = new FileReader();
+            reader.onload = function (e) {
+                cropModal.style.display = "flex";
+                if (cropper) { cropper.destroy(); cropper = null; }
+
+                // Wait for the image to actually finish loading before handing it to
+                // Cropper.js — instantiating immediately after setting .src races the
+                // image decode and reliably breaks on the 2nd+ image reusing this <img>.
+                cropImageEl.onload = function () {
+                    cropper = new Cropper(cropImageEl, {
+                        aspectRatio: 16 / 9,
+                        viewMode: 2,
+                        dragMode: "move",
+                        autoCropArea: 0.9,
+                        restore: false,
+                        guides: true,
+                        center: true,
+                        highlight: false,
+                        cropBoxMovable: true,
+                        cropBoxResizable: true,
+                    });
+                };
+                cropImageEl.src = e.target.result;
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function renderThumbStrip() {
+            thumbStrip.innerHTML = "";
+            croppedResults.forEach(function (dataUrl, index) {
+                var div = document.createElement('div');
+                div.className = 'room-thumb';
+                var img = document.createElement('img');
+                img.src = dataUrl;
+                var btn = document.createElement('button');
+                btn.type = 'button';
+                btn.className = 'room-thumb-remove';
+                btn.textContent = '×';
+                btn.addEventListener('click', function () {
+                    croppedResults.splice(index, 1);
+                    renderThumbStrip();
+                });
+                div.appendChild(img);
+                div.appendChild(btn);
+                thumbStrip.appendChild(div);
+            });
+            jsonInput.value = JSON.stringify(croppedResults);
+        }
+
+        var uploader = {
+            processNextFile: processNextFile,
+            pushResult: function (dataUrl) { croppedResults.push(dataUrl); },
+        };
+        return uploader;
+    }
+
+    var hotelUploader = makeImageUploader('hotelDropzone', 'hotelFileInput', 'hotelThumbStrip', 'croppedHotelImagesJson');
+    var roomUploader  = makeImageUploader('roomDropzone', 'roomFileInput', 'roomThumbStrip', 'croppedImagesJson');
+
+    function closeCropModal() {
+        cropModal.style.display = "none";
+        if (cropper) { cropper.destroy(); cropper = null; }
+    }
+
+    document.getElementById('cropClose2').addEventListener('click', function () {
+        closeCropModal();
+        if (activeUploader) activeUploader.processNextFile();
+    });
+    document.getElementById('cropCancel2').addEventListener('click', function () {
+        closeCropModal();
+        if (activeUploader) activeUploader.processNextFile();
+    });
+    document.getElementById('cropConfirm2').addEventListener('click', function () {
+        if (!cropper) return;
+        var res = cropResolution.value.split('x');
+        var canvas = cropper.getCroppedCanvas({
+            width: parseInt(res[0], 10),
+            height: parseInt(res[1], 10),
+            imageSmoothingQuality: "high",
+        });
+        if (activeUploader) activeUploader.pushResult(canvas.toDataURL('image/jpeg', 0.9));
+        closeCropModal();
+        if (activeUploader) activeUploader.processNextFile();
     });
 
-    // ปิด dropdown ถ้าคลิกข้างนอก
-    document.addEventListener("click", (e) => {
-        if (!customSelect.contains(e.target)) {
-            customSelect.classList.remove("open");
+    // ---- Custom confirm-delete modal (replaces native confirm()) ----
+    var confirmModal     = document.getElementById('confirmModal');
+    var confirmMessageEl = document.getElementById('confirmMessage');
+    var confirmOkBtn     = document.getElementById('confirmOkBtn');
+    var confirmCancelBtn = document.getElementById('confirmCancelBtn');
+    var pendingConfirmForm = null;
+
+    document.addEventListener('submit', function (e) {
+        var form = e.target;
+        if (form.dataset.confirm) {
+            e.preventDefault();
+            pendingConfirmForm = form;
+            confirmMessageEl.textContent = form.dataset.confirm;
+            confirmModal.style.display = 'flex';
         }
     });
+
+    function closeConfirmModal() {
+        confirmModal.style.display = 'none';
+        pendingConfirmForm = null;
+    }
+
+    confirmCancelBtn.addEventListener('click', closeConfirmModal);
+    confirmModal.addEventListener('click', function (e) {
+        if (e.target === confirmModal) closeConfirmModal();
+    });
+    confirmOkBtn.addEventListener('click', function () {
+        var form = pendingConfirmForm;
+        closeConfirmModal();
+        if (form) form.submit();
+    });
 });
 </script>
+
+</body>
+</html>

@@ -2,6 +2,62 @@
 session_start();
 if (isset($_SESSION["user"])) {
     header("Location: index.php");
+    exit;
+}
+
+$errors = [];
+$success = false;
+
+if ($_SERVER["REQUEST_METHOD"] === "POST") {
+    require_once "config/database.php";
+
+    $full_name      = trim($_POST["full_name"] ?? '');
+    $email          = trim($_POST["email"] ?? '');
+    $phone_number   = trim($_POST["phone_number"] ?? '');
+    $password       = $_POST["password"] ?? '';
+    $passwordRepeat = $_POST["repeat_password"] ?? '';
+
+    if (empty($full_name) || empty($email) || empty($password) || empty($passwordRepeat)) {
+        $errors[] = "กรุณากรอกข้อมูลให้ครบทุกช่อง";
+    }
+    if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+        $errors[] = "อีเมลไม่ถูกต้อง";
+    }
+    $phone_digits = preg_replace('/\D/', '', $phone_number);
+    if (empty($phone_number) || !preg_match('/^0\d{8,9}$/', $phone_digits)) {
+        $errors[] = "เบอร์โทรศัพท์ไม่ถูกต้อง (ตัวอย่าง: 081-234-5678)";
+    } else {
+        $phone_number = $phone_digits;
+    }
+    if (strlen($password) < 4) {
+        $errors[] = "รหัสผ่านต้องมีอย่างน้อย 4 ตัวอักษร";
+    }
+    if ($password !== $passwordRepeat) {
+        $errors[] = "รหัสผ่านไม่ตรงกัน";
+    }
+
+    if (empty($errors)) {
+        $check = $conn->prepare("SELECT id FROM users WHERE email = ?");
+        $check->bind_param("s", $email);
+        $check->execute();
+        if ($check->get_result()->num_rows > 0) {
+            $errors[] = "อีเมลนี้ถูกใช้งานแล้ว";
+        }
+        $check->close();
+    }
+
+    if (empty($errors)) {
+        $passwordHash = password_hash($password, PASSWORD_DEFAULT);
+        $stmt = $conn->prepare("INSERT INTO users (full_name, email, phone_number, password, role) VALUES (?, ?, ?, ?, 'user')");
+        $stmt->bind_param("ssss", $full_name, $email, $phone_number, $passwordHash);
+
+        if ($stmt->execute()) {
+            $success = true;
+        } else {
+            $errors[] = "เกิดข้อผิดพลาดในระบบ กรุณาลองใหม่อีกครั้ง";
+        }
+        $stmt->close();
+    }
 }
 ?>
 <!DOCTYPE html>
@@ -11,151 +67,175 @@ if (isset($_SESSION["user"])) {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>สมัครสมาชิก</title>
     <link rel="icon" type="image/png" href="image/hotel-icon-coupon-codes-hotel.png">
-    <link rel="stylesheet" href="style2.css?v=1.6">
+    <link rel="stylesheet" href="assets/css/style2.css?v=<?= filemtime(__DIR__ . '/assets/css/style2.css') ?>">
     <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@400;600&display=swap" rel="stylesheet">
 </head>
 <body>
-    <?php
-    if ($_SERVER["REQUEST_METHOD"] == "POST") {
-        $full_name = $_POST["full_name"];
-        $email = $_POST["email"];
-        $phone_number = $_POST["phone_number"];
-        $password = $_POST["password"];
-        $passwordRepeat = $_POST["repeat_password"];
 
-        $passwordHash = password_hash($password, PASSWORD_DEFAULT);
+<div class="auth-page">
 
-        $errors = array();
-
-        if (empty($full_name) OR empty($email) OR empty($password) OR empty($passwordRepeat)) {
-            array_push($errors, "กรุณากรอกข้อมูลให้ครบทุกช่อง");
-        }
-        if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
-            array_push($errors, "อีเมลไม่ถูกต้อง");
-        }
-        if (strlen($password) < 4) {
-            array_push($errors, "รหัสผ่านต้องมีอย่างน้อย 4 ตัวอักษร");
-        }
-        if ($password !== $passwordRepeat) {
-            array_push($errors, "รหัสผ่านไม่ตรงกัน");
-        }
-
-        require_once "database.php";
-        $sql = "SELECT * FROM users WHERE email = '$email'";
-        $result = mysqli_query($conn, $sql);
-        $rowCount = mysqli_num_rows($result);
-        if ($rowCount > 0) {
-            array_push($errors, "อีเมลนี้ถูกใช้งานแล้ว");
-        }
-
-        if (count($errors) > 0) {
-            foreach ($errors as $error) {
-                echo "<div class='alert alert-danger'>$error</div>";
-            }
-        } else {
-            /*
-            $defaultProfile = "default.jpg";
-            $sql = "INSERT INTO users (full_name, email, phone_number, password, role, profile_picture) VALUES (?, ?, ?, ?, 'user', ?)";
-            $stmt = $conn->prepare($sql);
-            $stmt->bind_param("sssss", $full_name, $email, $phone_number, $passwordHash, $defaultProfile);
-            */
-
-            $passwordHash = password_hash($password, PASSWORD_DEFAULT);
-            $sql = "INSERT INTO users (full_name, email, phone_number, password, role) VALUES (?, ?, ?, ?, 'user')";
-            $stmt = $conn->prepare($sql);
-            
-            if ($stmt === false) {
-                die("Prepare failed: " . $conn->error);
-            }
-
-            $stmt->bind_param("ssss", $full_name, $email, $phone_number, $passwordHash);
-
-            if ($stmt->execute()) {
-                echo "<div class='alert alert-success'>สมัครสมาชิกเรียบร้อยแล้ว</div>";
-            } else {
-                echo "<div class='alert alert-danger'>Something went wrong</div>";
-                echo "<div>Error: " . $stmt->error . "</div>";
-            }
-        }
-    }
-    ?>
-    <header class="navbar">
-        <div class="container">
-            <a href="index.php" class="logo">
-                <img src="image\hotel-icon-coupon-codes-hotel.png" alt="Logo">
-            </a>
-            <nav class="nav-links">
-                <a href="index.php">Home</a>
-                <a href="hotel.php">Hotel</a>
-                <a href="contact.php">Contact</a>
-            </nav>
-            <div class="auth-links">
-                <a href="register.php" class="btn-login">สมัครสมาชิก</a>
-                <a href="login.php" class="btn-signup">เข้าสู่ระบบ</a>
-            </div>
+    <!-- Left decorative panel -->
+    <div class="auth-panel">
+        <a href="index.php" class="auth-panel-logo">
+            <img src="image/hotel-icon-coupon-codes-hotel.png" alt="Logo">
+        </a>
+        <h1>ยินดีต้อนรับ<br>สู่ JustHottel</h1>
+        <p>สร้างบัญชีเพื่อค้นหาและจองโรงแรมที่ดีที่สุดในจังหวัดปัตตานี</p>
+        <div class="auth-panel-badges">
+            <span>🏨 โรงแรมคัดสรร</span>
+            <span>⭐ รีวิวจริง</span>
+            <span>🔒 ปลอดภัย</span>
         </div>
-    </header>
-    
-    <div class="form-container">
-        <div class="form-card">
-            <h2>สมัครสมาชิกผู้ใช้</h2>
-            <form action="register.php" method="post">
-                <input type="text" name="full_name" placeholder="ชื่อ - สกุล">
-                <input type="email" name="email" placeholder="อีเมลของคุณ">
-                <input type="text" name="phone_number" placeholder="เบอร์โทรของคุณ">
-                <div class="password-wrapper">
-                    <input type="password" name="password" id="password" placeholder="รหัสผ่าน">
-                    <img src="image/hide.png" class="toggle-password" id="togglePassword1" alt="toggle">
-                </div>
-                <!--
-                <input type="password" name="repeat_password" placeholder="ยืนยันรหัสผ่าน">
-                -->
-                <div class="password-wrapper">
-                    <input type="password" name="repeat_password" id="repeat_password" placeholder="ยืนยันรหัสผ่าน">
-                    <img src="image/hide.png" class="toggle-password" id="togglePassword2" alt="toggle">
-                </div>
-                <button type="submit" name="submit">สมัครสมาชิก</button>
-            </form>
-            <p>ได้สมัครสมาชิกแล้วใช่หรือไม่? <a href="login.php">คลิกที่นี่เพื่อเข้าสู่ระบบ</a></p>
+        <a href="index.php" class="auth-back-link">← กลับหน้าหลัก</a>
+    </div>
+
+    <!-- Right form panel -->
+    <div class="auth-form-side">
+        <div class="auth-form-box">
+            <div class="auth-form-header">
+                <a href="index.php" class="auth-form-back">← กลับหน้าหลัก</a>
+                <h2>สมัครสมาชิก</h2>
+                <p>มีบัญชีแล้ว? <a href="login.php">เข้าสู่ระบบ</a></p>
+            </div>
+
+            <?php foreach ($errors as $error): ?>
+                <div class="alert alert-danger">⚠ <?= htmlspecialchars($error) ?></div>
+            <?php endforeach; ?>
+
+            <?php if ($success): ?>
+                <div class="alert alert-success">✓ สมัครสมาชิกเรียบร้อยแล้ว! <a href="login.php">เข้าสู่ระบบเลย →</a></div>
+            <?php else: ?>
+                <form action="register.php" method="post" class="auth-form">
+                    <div class="field-group">
+                        <label>ชื่อ - สกุล</label>
+                        <div class="field-wrap">
+                            <span class="field-icon">👤</span>
+                            <input type="text" name="full_name" placeholder="กรอกชื่อ-สกุล"
+                                   value="<?= htmlspecialchars($_POST["full_name"] ?? '') ?>">
+                        </div>
+                    </div>
+                    <div class="field-group">
+                        <label>อีเมล</label>
+                        <div class="field-wrap">
+                            <span class="field-icon">✉</span>
+                            <input type="email" name="email" placeholder="example@email.com"
+                                   value="<?= htmlspecialchars($_POST["email"] ?? '') ?>">
+                        </div>
+                    </div>
+                    <div class="field-group">
+                        <label>เบอร์โทรศัพท์</label>
+                        <div class="field-wrap" id="phoneWrap">
+                            <span class="field-icon">📱</span>
+                            <input type="tel" name="phone_number" id="phoneInput"
+                                   inputmode="numeric"
+                                   autocomplete="tel"
+                                   placeholder="0XX-XXX-XXXX"
+                                   maxlength="12"
+                                   value="<?= htmlspecialchars($_POST["phone_number"] ?? '') ?>">
+                            <span class="phone-status" id="phoneStatus"></span>
+                        </div>
+                        <span class="field-hint">กรอกเบอร์ 10 หลัก เช่น 081-234-5678</span>
+                    </div>
+                    <div class="field-group">
+                        <label>รหัสผ่าน</label>
+                        <div class="field-wrap password-wrapper">
+                            <span class="field-icon">🔑</span>
+                            <input type="password" name="password" id="password" placeholder="อย่างน้อย 4 ตัวอักษร">
+                            <img src="image/hide.png" class="toggle-password" id="togglePassword1" alt="toggle">
+                        </div>
+                    </div>
+                    <div class="field-group">
+                        <label>ยืนยันรหัสผ่าน</label>
+                        <div class="field-wrap password-wrapper">
+                            <span class="field-icon">🔑</span>
+                            <input type="password" name="repeat_password" id="repeat_password" placeholder="พิมพ์รหัสผ่านอีกครั้ง">
+                            <img src="image/hide.png" class="toggle-password" id="togglePassword2" alt="toggle">
+                        </div>
+                    </div>
+                    <button type="submit" name="submit" class="auth-btn">สมัครสมาชิก</button>
+                </form>
+
+                <div class="auth-divider">หรือ</div>
+
+                <a href="auth/google_login.php" class="btn-google">
+                    <img src="image/google-icon.svg" alt="Google">
+                    สมัครสมาชิกด้วย Google
+                </a>
+            <?php endif; ?>
         </div>
     </div>
-    
-    <footer class="footer">
-        <div class="container">
-            <div class="footer-content">
-                <div class="footer-logo">
-                    <img src="image\hotel-icon-coupon-codes-hotel.png" alt="Footer Logo">
-                </div>
-                <p>© 2025 PNVC, นายครรชิดพล เพ็งเอียด</p>
-                <div class="social-icons">
-                    <a href="https://x.com/FGgez777"><img src="image\twwokX.png" alt="Twitter_X"></a>
-                    <a href="https://www.instagram.com/face.2339/?igsh=dWh6eGtmbjVpanRt"><img src="image\insatagem.png" alt="Instagram"></a>
-                    <a href="https://www.facebook.com/face.pengeid/"><img src="image\fackbookicon.png" alt="Facebook"></a>
-                </div>
-            </div>
-        </div>
-    </footer>
-</body>
-</html>
+
+</div>
 
 <script>
-document.addEventListener("DOMContentLoaded", function() {
+document.addEventListener("DOMContentLoaded", function () {
+    // Password toggles
     function setupToggle(inputId, iconId) {
-        const passwordInput = document.getElementById(inputId);
-        const toggleIcon = document.getElementById(iconId);
-
-        toggleIcon.addEventListener("click", function() {
-            if (passwordInput.type === "password") {
-                passwordInput.type = "text";
-                toggleIcon.src = "image/view.png";
-            } else {
-                passwordInput.type = "password";
-                toggleIcon.src = "image/hide.png";
-            }
+        const input = document.getElementById(inputId);
+        const icon  = document.getElementById(iconId);
+        if (!input || !icon) return;
+        icon.addEventListener("click", function () {
+            input.type = input.type === "password" ? "text" : "password";
+            icon.src   = input.type === "password" ? "image/hide.png" : "image/view.png";
         });
     }
-
     setupToggle("password", "togglePassword1");
     setupToggle("repeat_password", "togglePassword2");
+
+    // Phone auto-format
+    const phoneInput  = document.getElementById("phoneInput");
+    const phoneWrap   = document.getElementById("phoneWrap");
+    const phoneStatus = document.getElementById("phoneStatus");
+
+    function formatPhone(val) {
+        const d = val.replace(/\D/g, '').slice(0, 10);
+        if (d.length <= 3) return d;
+        if (d.length <= 6) return d.slice(0,3) + '-' + d.slice(3);
+        return d.slice(0,3) + '-' + d.slice(3,6) + '-' + d.slice(6);
+    }
+
+    function validatePhone(val) {
+        const d = val.replace(/\D/g, '');
+        return d.length >= 9 && d.length <= 10 && d.charAt(0) === '0';
+    }
+
+    function setPhoneState(valid, empty) {
+        phoneWrap.classList.remove('field-valid', 'field-error');
+        phoneStatus.textContent = '';
+        if (empty) return;
+        if (valid) {
+            phoneWrap.classList.add('field-valid');
+            phoneStatus.textContent = '✓';
+        } else {
+            phoneWrap.classList.add('field-error');
+            phoneStatus.textContent = '✗';
+        }
+    }
+
+    if (phoneInput) {
+        phoneInput.addEventListener('input', function () {
+            const pos = this.selectionStart;
+            const prev = this.value;
+            const formatted = formatPhone(this.value);
+            this.value = formatted;
+            const added = formatted.length - prev.length;
+            this.setSelectionRange(pos + added, pos + added);
+            setPhoneState(validatePhone(formatted), formatted === '');
+        });
+
+        phoneInput.addEventListener('keydown', function (e) {
+            if ([8,9,27,46,37,38,39,40].includes(e.keyCode)) return;
+            if (e.key && !/[\d]/.test(e.key) && !e.ctrlKey && !e.metaKey) {
+                e.preventDefault();
+            }
+        });
+
+        phoneInput.addEventListener('blur', function () {
+            setPhoneState(validatePhone(this.value), this.value === '');
+        });
+    }
 });
 </script>
+
+</body>
+</html>
