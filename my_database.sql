@@ -1,11 +1,11 @@
 -- phpMyAdmin SQL Dump
--- version 5.2.3
+-- version 5.2.2
 -- https://www.phpmyadmin.net/
 --
 -- Host: db2
--- Generation Time: Jul 03, 2026 at 04:16 PM
--- Server version: 9.7.0
--- PHP Version: 8.3.26
+-- Generation Time: Sep 25, 2025 at 10:34 AM
+-- Server version: 9.4.0
+-- PHP Version: 8.2.27
 
 SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
 START TRANSACTION;
@@ -33,20 +33,12 @@ CREATE TABLE `bookings` (
   `last_name` text NOT NULL,
   `email` text NOT NULL,
   `phone` text NOT NULL,
+  `country` text NOT NULL,
   `checkin` text NOT NULL,
   `checkout` text NOT NULL,
   `guests` int NOT NULL,
-  `hotel_id` int DEFAULT NULL,
-  `room_type_id` int DEFAULT NULL,
   `book_hotel_name` text CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-
---
--- Dumping data for table `bookings`
---
-
-INSERT INTO `bookings` (`id`, `first_name`, `last_name`, `email`, `phone`, `checkin`, `checkout`, `guests`, `hotel_id`, `room_type_id`, `book_hotel_name`) VALUES
-(1, 'A', 'B', 'a@a.com', '0800000000', '2026-09-01', '2026-09-02', 1, NULL, NULL, 'X');
 
 -- --------------------------------------------------------
 
@@ -58,8 +50,6 @@ CREATE TABLE `hotels` (
   `id` int NOT NULL,
   `hotel_name` text CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,
   `location` text CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,
-  `latitude` decimal(10,7) DEFAULT NULL,
-  `longitude` decimal(10,7) DEFAULT NULL,
   `price` text NOT NULL,
   `description` text NOT NULL,
   `facilities` text CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,
@@ -67,13 +57,6 @@ CREATE TABLE `hotels` (
   `type` text CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,
   `owner_id` int NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-
---
--- Dumping data for table `hotels`
---
-
-INSERT INTO `hotels` (`id`, `hotel_name`, `location`, `latitude`, `longitude`, `price`, `description`, `facilities`, `surrounding`, `type`, `owner_id`) VALUES
-(1, 'awdawdawd', 'ไม่บอกหนอก', 17.3663673, 101.4518738, '123123', 'awdawdawd', '123123', '12412414awdawdawd', '', 5);
 
 -- --------------------------------------------------------
 
@@ -87,75 +70,6 @@ CREATE TABLE `hotel_images` (
   `image_path` text NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
---
--- Dumping data for table `hotel_images`
---
-
-INSERT INTO `hotel_images` (`id`, `hotel_id`, `image_path`) VALUES
-(1, 1, 'uploads/hotels/hotel_6a47b0138bf30.png'),
-(13, 1, 'uploads/hotels/hotel_6a47b4c58dea0.png'),
-(14, 1, 'uploads/hotels/hotel_6a47b4c592806.png'),
-(15, 1, 'uploads/hotels/hotel_6a47b4dbc6b98.png'),
-(16, 1, 'uploads/hotels/hotel_6a47b4dbcb991.jpg'),
-(17, 1, 'uploads/hotels/hotel_6a47b4dbd4297.jpg'),
-(18, 1, 'uploads/hotels/hotel_6a47b4dbd89de.png'),
-(19, 1, 'uploads/hotels/hotel_6a47b4dbde93a.jpeg'),
-(21, 1, 'uploads/hotels/hotel_6a47b4dbe6efb.png');
-
--- --------------------------------------------------------
-
---
--- Table structure for table `room_images`
---
-
-CREATE TABLE `room_images` (
-  `id` int NOT NULL,
-  `room_type_id` int NOT NULL,
-  `image_path` varchar(500) NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-
---
--- Dumping data for table `room_images`
---
-
-INSERT INTO `room_images` (`id`, `room_type_id`, `image_path`) VALUES
-(5, 4, 'uploads/rooms/room_6a47b46919163.jpg'),
-(6, 4, 'uploads/rooms/room_6a47b4691e128.jpg'),
-(7, 4, 'uploads/rooms/room_6a47b4803cf77.jpg'),
-(8, 4, 'uploads/rooms/room_6a47b48041ef4.jpg'),
-(9, 4, 'uploads/rooms/room_6a47b48045fe0.jpg'),
-(10, 4, 'uploads/rooms/room_6a47b4804acb8.jpg'),
-(11, 6, 'uploads/rooms/room_6a47b67cc2686.jpg'),
-(12, 6, 'uploads/rooms/room_6a47b67cc7972.jpg'),
-(13, 6, 'uploads/rooms/room_6a47b67ccc523.jpg');
-
--- --------------------------------------------------------
-
---
--- Table structure for table `room_types`
---
-
-CREATE TABLE `room_types` (
-  `id` int NOT NULL,
-  `hotel_id` int NOT NULL,
-  `room_name` varchar(255) NOT NULL,
-  `capacity` int NOT NULL DEFAULT '2',
-  `price_per_night` decimal(10,2) NOT NULL,
-  `quantity` int NOT NULL DEFAULT '1',
-  `description` text,
-  `amenities` text,
-  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-
---
--- Dumping data for table `room_types`
---
-
-INSERT INTO `room_types` (`id`, `hotel_id`, `room_name`, `capacity`, `price_per_night`, `quantity`, `description`, `amenities`, `created_at`) VALUES
-(4, 1, 'fthfthftj', 2, 1200.00, 5, 'efefef', 'rgrgerg', '2026-07-03 12:37:33'),
-(6, 1, '423423424', 4, 1111.00, 2, '12312312', '124124124124', '2026-07-03 13:17:48'),
-(9, 1, '565656', 33, 3434.00, 44, '343434', '53535353', '2026-07-03 15:30:59');
-
 -- --------------------------------------------------------
 
 --
@@ -166,23 +80,11 @@ CREATE TABLE `users` (
   `id` int NOT NULL,
   `full_name` varchar(255) NOT NULL,
   `email` varchar(255) NOT NULL,
-  `phone_number` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci DEFAULT NULL,
-  `password` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci DEFAULT NULL,
+  `phone_number` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,
+  `password` varchar(255) NOT NULL,
   `role` varchar(255) NOT NULL,
-  `profile_picture` varchar(255) NOT NULL DEFAULT 'default.jpg',
-  `google_id` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci DEFAULT NULL
+  `profile_picture` varchar(255) NOT NULL DEFAULT 'default.jpg'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-
---
--- Dumping data for table `users`
---
-
-INSERT INTO `users` (`id`, `full_name`, `email`, `phone_number`, `password`, `role`, `profile_picture`, `google_id`) VALUES
-(1, 'adwadw awdiosejfsf', 'awdiojijeifehuifd@gmail.com', 'adwadw', '$2y$10$69QfiUwMi/3v55xrEjee..1bchpGmVgdr1C3DbdSz1gc96iJSaYRS', 'user', 'default.jpg', NULL),
-(2, 'rgjirg krgiirgjrgjigr', 'adaaaa@gmail.com', 'adaaaa@gmail.com', '$2y$10$X4w7oCuYn03JZRWPaCJaDuqDVNOpgDqh9l4aatn0uTfeo/aQdX0I6', 'user', 'profile_2_1782767972.jpg', NULL),
-(3, 'ONE OF THE TEST MEME DO NOT A TEST', 'ingkawat2023reals@gmail.com', '0993113131', NULL, 'user', 'profile_3_1783074554.jpg', '109208015442849269891'),
-(4, 'okok@gmail.com', 'okok@gmail.com', '0993434343', '$2y$10$c7w1PhdAlietUj89yZKgRef2SYotRgj2CpjTXpfyIFOE1.8/2v2ZK', 'user', 'default.jpg', NULL),
-(5, 'SANS', 'okko0990okko@gmail.com', NULL, NULL, 'owner', 'https://lh3.googleusercontent.com/a/ACg8ocLW0ILNtNq8LfQOQ1BpanmgftxIsC5cy_nFn-Z5JflSwBxaxPg=s96-c', '109647387825501843945');
 
 --
 -- Indexes for dumped tables
@@ -207,20 +109,6 @@ ALTER TABLE `hotel_images`
   ADD PRIMARY KEY (`id`);
 
 --
--- Indexes for table `room_images`
---
-ALTER TABLE `room_images`
-  ADD PRIMARY KEY (`id`),
-  ADD KEY `idx_room_images_room` (`room_type_id`);
-
---
--- Indexes for table `room_types`
---
-ALTER TABLE `room_types`
-  ADD PRIMARY KEY (`id`),
-  ADD KEY `idx_room_types_hotel` (`hotel_id`);
-
---
 -- Indexes for table `users`
 --
 ALTER TABLE `users`
@@ -234,53 +122,25 @@ ALTER TABLE `users`
 -- AUTO_INCREMENT for table `bookings`
 --
 ALTER TABLE `bookings`
-  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
+  MODIFY `id` int NOT NULL AUTO_INCREMENT;
 
 --
 -- AUTO_INCREMENT for table `hotels`
 --
 ALTER TABLE `hotels`
-  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=9;
+  MODIFY `id` int NOT NULL AUTO_INCREMENT;
 
 --
 -- AUTO_INCREMENT for table `hotel_images`
 --
 ALTER TABLE `hotel_images`
-  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=24;
-
---
--- AUTO_INCREMENT for table `room_images`
---
-ALTER TABLE `room_images`
-  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=14;
-
---
--- AUTO_INCREMENT for table `room_types`
---
-ALTER TABLE `room_types`
-  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=10;
+  MODIFY `id` int NOT NULL AUTO_INCREMENT;
 
 --
 -- AUTO_INCREMENT for table `users`
 --
 ALTER TABLE `users`
-  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
-
---
--- Constraints for dumped tables
---
-
---
--- Constraints for table `room_images`
---
-ALTER TABLE `room_images`
-  ADD CONSTRAINT `fk_room_images_room` FOREIGN KEY (`room_type_id`) REFERENCES `room_types` (`id`) ON DELETE CASCADE;
-
---
--- Constraints for table `room_types`
---
-ALTER TABLE `room_types`
-  ADD CONSTRAINT `fk_room_types_hotel` FOREIGN KEY (`hotel_id`) REFERENCES `hotels` (`id`) ON DELETE CASCADE;
+  MODIFY `id` int NOT NULL AUTO_INCREMENT;
 COMMIT;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
