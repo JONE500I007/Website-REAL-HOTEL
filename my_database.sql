@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: db2
--- Generation Time: Jul 03, 2026 at 04:16 PM
+-- Generation Time: Jul 13, 2026 at 06:46 PM
 -- Server version: 9.7.0
 -- PHP Version: 8.3.26
 
@@ -38,15 +38,19 @@ CREATE TABLE `bookings` (
   `guests` int NOT NULL,
   `hotel_id` int DEFAULT NULL,
   `room_type_id` int DEFAULT NULL,
-  `book_hotel_name` text CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL
+  `book_hotel_name` text CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,
+  `total_price` decimal(10,2) NOT NULL DEFAULT '0.00',
+  `payment_slip` varchar(255) DEFAULT NULL,
+  `payment_status` varchar(20) NOT NULL DEFAULT 'pending_verification'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 --
 -- Dumping data for table `bookings`
 --
 
-INSERT INTO `bookings` (`id`, `first_name`, `last_name`, `email`, `phone`, `checkin`, `checkout`, `guests`, `hotel_id`, `room_type_id`, `book_hotel_name`) VALUES
-(1, 'A', 'B', 'a@a.com', '0800000000', '2026-09-01', '2026-09-02', 1, NULL, NULL, 'X');
+INSERT INTO `bookings` (`id`, `first_name`, `last_name`, `email`, `phone`, `checkin`, `checkout`, `guests`, `hotel_id`, `room_type_id`, `book_hotel_name`, `total_price`, `payment_slip`, `payment_status`) VALUES
+(1, 'A', 'B', 'a@a.com', '0800000000', '2026-09-01', '2026-09-02', 1, NULL, NULL, 'X', 0.00, NULL, 'pending_verification'),
+(8, 'ONE', 'OF THE TEST MEME DO NOT A TEST', 'ingkawat2023reals@gmail.com', '0993113131', '2026-07-11', '2026-07-12', 1, 1, 6, 'awdawdawd', 1111.00, 'slip_6a52071fe408c.png', 'confirmed');
 
 -- --------------------------------------------------------
 
@@ -182,7 +186,7 @@ INSERT INTO `users` (`id`, `full_name`, `email`, `phone_number`, `password`, `ro
 (2, 'rgjirg krgiirgjrgjigr', 'adaaaa@gmail.com', 'adaaaa@gmail.com', '$2y$10$X4w7oCuYn03JZRWPaCJaDuqDVNOpgDqh9l4aatn0uTfeo/aQdX0I6', 'user', 'profile_2_1782767972.jpg', NULL),
 (3, 'ONE OF THE TEST MEME DO NOT A TEST', 'ingkawat2023reals@gmail.com', '0993113131', NULL, 'user', 'profile_3_1783074554.jpg', '109208015442849269891'),
 (4, 'okok@gmail.com', 'okok@gmail.com', '0993434343', '$2y$10$c7w1PhdAlietUj89yZKgRef2SYotRgj2CpjTXpfyIFOE1.8/2v2ZK', 'user', 'default.jpg', NULL),
-(5, 'SANS', 'okko0990okko@gmail.com', NULL, NULL, 'owner', 'https://lh3.googleusercontent.com/a/ACg8ocLW0ILNtNq8LfQOQ1BpanmgftxIsC5cy_nFn-Z5JflSwBxaxPg=s96-c', '109647387825501843945');
+(5, 'SANS', 'okko0990okko@gmail.com', '0921231231', NULL, 'owner', 'profile_5_6a553018b0ca8.jpg', '109647387825501843945');
 
 --
 -- Indexes for dumped tables
@@ -234,13 +238,13 @@ ALTER TABLE `users`
 -- AUTO_INCREMENT for table `bookings`
 --
 ALTER TABLE `bookings`
-  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
+  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=16;
 
 --
 -- AUTO_INCREMENT for table `hotels`
 --
 ALTER TABLE `hotels`
-  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=9;
+  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=11;
 
 --
 -- AUTO_INCREMENT for table `hotel_images`
@@ -258,13 +262,13 @@ ALTER TABLE `room_images`
 -- AUTO_INCREMENT for table `room_types`
 --
 ALTER TABLE `room_types`
-  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=10;
+  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=12;
 
 --
 -- AUTO_INCREMENT for table `users`
 --
 ALTER TABLE `users`
-  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
+  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=11;
 
 --
 -- Constraints for dumped tables

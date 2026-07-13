@@ -2242,6 +2242,13 @@ body {
         flex: 1;
         max-height: none;
     }
+
+    /* The PromptPay QR modal reuses the crop modal shell but its content
+       is fixed-size, so it shouldn't stretch to fill the screen like the
+       image-cropper canvas does. */
+    .qr-canvas-wrap {
+        flex: 0 0 auto;
+    }
 }
 
 /* ============================================================
@@ -2347,6 +2354,25 @@ body {
 
 .booking-card-body { padding: 20px; }
 
+.booking-payment-status {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 14px;
+}
+
+.payment-status-label {
+    font-size: 15px;
+    font-weight: 700;
+}
+
+.payment-status-total {
+    font-size: 15px;
+    color: #555;
+    font-weight: 600;
+}
+
 .booking-dates {
     display: flex;
     align-items: center;
@@ -2420,6 +2446,126 @@ body {
     font-size: 14px;
     color: #333;
     word-break: break-all;
+}
+
+/* ---- Owner dashboard: pending pill + status badge + slip review ---- */
+.owner-pending-pill {
+    display: inline-block;
+    background: #e05c5c;
+    color: white;
+    font-size: 12px;
+    font-weight: 700;
+    padding: 3px 10px;
+    border-radius: 12px;
+    vertical-align: middle;
+    margin-left: 6px;
+}
+
+.owner-status-badge {
+    font-weight: 700;
+}
+
+.owner-status-badge.status-pending {
+    background: rgba(255, 214, 92, 0.28);
+    border-color: rgba(255, 214, 92, 0.55);
+    color: #fff3cd;
+}
+
+.owner-status-badge.status-confirmed {
+    background: rgba(92, 255, 140, 0.22);
+    border-color: rgba(92, 255, 140, 0.5);
+    color: #d9f2df;
+}
+
+.owner-status-badge.status-rejected {
+    background: rgba(255, 92, 92, 0.28);
+    border-color: rgba(255, 92, 92, 0.55);
+    color: #fbdede;
+}
+
+.owner-slip-row {
+    display: flex;
+    gap: 16px;
+    align-items: flex-start;
+    flex-wrap: wrap;
+    margin-top: 16px;
+    padding-top: 16px;
+    border-top: 1px solid #eee;
+}
+
+.slip-thumb-wrap {
+    flex-shrink: 0;
+    width: 72px;
+    height: 72px;
+    border-radius: 10px;
+    overflow: hidden;
+    display: block;
+}
+
+.slip-thumb {
+    width: 72px;
+    height: 72px;
+    object-fit: cover;
+    border-radius: 10px;
+    border: 1px solid #e0d5f0;
+    display: block;
+}
+
+.slip-thumb-placeholder {
+    background: #f5f2fa;
+    border: 1px dashed #d8cbee;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+    color: #b0a0c8;
+    text-align: center;
+    padding: 4px;
+}
+
+.owner-status-actions {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    flex: 1;
+    min-width: 220px;
+}
+
+.status-btn {
+    flex: 1;
+    min-width: 110px;
+    padding: 10px 10px;
+    border-radius: 8px;
+    border: 1.5px solid transparent;
+    background: #f2edf9;
+    color: #6b5a8a;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.15s, border-color 0.15s, color 0.15s;
+    white-space: nowrap;
+}
+
+.status-btn:hover {
+    background: #e5dcf5;
+}
+
+.status-btn.active.status-pending {
+    background: #fff3cd;
+    color: #8a6d1a;
+    border-color: #e0b84a;
+}
+
+.status-btn.active.status-confirmed {
+    background: #d9f2df;
+    color: #1f6b34;
+    border-color: #4caf88;
+}
+
+.status-btn.active.status-rejected {
+    background: #fbdede;
+    color: #a32c2c;
+    border-color: #e05c5c;
 }
 
 .board-empty {
@@ -2505,6 +2651,16 @@ body {
         padding: 14px 16px;
     }
 
+    .booking-payment-status {
+        gap: 6px 12px;
+        margin-bottom: 12px;
+    }
+
+    .payment-status-label,
+    .payment-status-total {
+        font-size: 13px;
+    }
+
     /* Dates: stack vertically */
     .booking-dates {
         flex-direction: row;
@@ -2537,6 +2693,25 @@ body {
 
     .info-value {
         font-size: 13px;
+    }
+
+    /* Owner dashboard: stack slip + status buttons, full-width buttons */
+    .owner-slip-row {
+        flex-direction: column;
+        margin-top: 12px;
+        padding-top: 12px;
+    }
+
+    .owner-status-actions {
+        min-width: 0;
+        width: 100%;
+    }
+
+    .status-btn {
+        min-width: 0;
+        font-size: 12px;
+        padding: 10px 6px;
+        white-space: normal;
     }
 
     /* Empty state */

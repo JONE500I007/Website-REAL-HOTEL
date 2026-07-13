@@ -7,10 +7,11 @@ if (!isset($_SESSION["user_id"])) {
     exit;
 }
 
-$user_email = $_SESSION["user_email"];
+$user_email = $_SESSION["user_email"] ?? "";
 $stmt = $conn->prepare("
     SELECT id, first_name, last_name, email, phone,
-           checkin, checkout, guests, book_hotel_name
+           checkin, checkout, guests, book_hotel_name,
+           total_price, payment_status
     FROM bookings
     WHERE email = ?
     ORDER BY id DESC
@@ -45,10 +46,17 @@ $stmt->close();
 
     <?php if ($result && $result->num_rows > 0): ?>
         <div class="booking-cards">
-            <?php while ($row = $result->fetch_assoc()):
+            <?php
+            $paymentStatusLabels = [
+                'pending_verification' => ['label' => '⏳ รอตรวจสอบการชำระเงิน', 'color' => '#b8860b'],
+                'confirmed'             => ['label' => '✅ ยืนยันการจองแล้ว',       'color' => '#2e7d32'],
+                'rejected'              => ['label' => '❌ การชำระเงินถูกปฏิเสธ',    'color' => '#c62828'],
+            ];
+            while ($row = $result->fetch_assoc()):
                 $checkin  = $row['checkin']  ? new DateTime($row['checkin'])  : null;
                 $checkout = $row['checkout'] ? new DateTime($row['checkout']) : null;
                 $nights   = ($checkin && $checkout) ? $checkin->diff($checkout)->days : '-';
+                $status   = $paymentStatusLabels[$row['payment_status']] ?? $paymentStatusLabels['pending_verification'];
             ?>
             <div class="booking-card">
                 <div class="booking-card-top">
@@ -57,8 +65,18 @@ $stmt->close();
                     </div>
                     <div class="booking-nights-badge"><?= $nights ?> คืน</div>
                 </div>
-
                 <div class="booking-card-body">
+                    <div class="booking-payment-status">
+                        <span class="payment-status-label" style="color:<?= $status['color'] ?>;">
+                            <?= $status['label'] ?>
+                        </span>
+                        <?php if ((float) $row['total_price'] > 0): ?>
+                            <span class="payment-status-total">
+                                ยอดรวม ฿<?= number_format((float) $row['total_price'], 2) ?>
+                            </span>
+                        <?php endif; ?>
+                    </div>
+
                     <div class="booking-dates">
                         <div class="booking-date-box">
                             <span class="date-label">เช็คอิน</span>

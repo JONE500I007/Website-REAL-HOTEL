@@ -8,6 +8,7 @@ if (!isset($_SESSION["user_id"]) || $_SESSION["role"] !== "admin") {
 }
 
 $msg = '';
+$validPaymentStatuses = ['pending_verification', 'confirmed', 'rejected'];
 
 if ($_SERVER["REQUEST_METHOD"] === "POST") {
     if (isset($_POST["update_booking"])) {
@@ -20,16 +21,19 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
         $checkout        = $_POST["checkout"];
         $guests          = (int) $_POST["guests"];
         $book_hotel_name = $_POST["book_hotel_name"];
+        $payment_status  = in_array($_POST["payment_status"] ?? '', $validPaymentStatuses, true)
+            ? $_POST["payment_status"]
+            : 'pending_verification';
 
         $stmt = $conn->prepare("
             UPDATE bookings
-            SET first_name=?, last_name=?, email=?, phone=?, checkin=?, checkout=?, guests=?, book_hotel_name=?
+            SET first_name=?, last_name=?, email=?, phone=?, checkin=?, checkout=?, guests=?, book_hotel_name=?, payment_status=?
             WHERE id=?
         ");
-        $stmt->bind_param("sssssssii", $first_name, $last_name, $email, $phone, $checkin, $checkout, $guests, $book_hotel_name, $id);
-        $stmt->execute();
+        $stmt->bind_param("ssssssissi", $first_name, $last_name, $email, $phone, $checkin, $checkout, $guests, $book_hotel_name, $payment_status, $id);
+        $ok  = $stmt->execute();
+        $msg = $ok ? "อัปเดตข้อมูลการจองเรียบร้อยแล้ว" : "เกิดข้อผิดพลาด: " . $stmt->error;
         $stmt->close();
-        $msg = "อัปเดตข้อมูลการจองเรียบร้อยแล้ว";
     }
 
     if (isset($_POST["delete_booking"])) {
@@ -77,6 +81,9 @@ $result = $conn->query("SELECT * FROM bookings ORDER BY id ASC");
                     <th>Check-out</th>
                     <th>Guests</th>
                     <th>โรงแรม</th>
+                    <th>ยอดชำระ</th>
+                    <th>สลิป</th>
+                    <th>สถานะการชำระเงิน</th>
                     <th>การจัดการ</th>
                 </tr>
             </thead>
@@ -93,6 +100,23 @@ $result = $conn->query("SELECT * FROM bookings ORDER BY id ASC");
                         <td><input type="date" name="checkout" value="<?= htmlspecialchars($row["checkout"]) ?>"></td>
                         <td><input type="number" name="guests" min="1" value="<?= htmlspecialchars($row["guests"]) ?>"></td>
                         <td><input type="text" name="book_hotel_name" value="<?= htmlspecialchars($row["book_hotel_name"]) ?>"></td>
+                        <td>฿<?= number_format((float) $row["total_price"], 2) ?></td>
+                        <td>
+                            <?php if (!empty($row["payment_slip"])): ?>
+                                <a href="uploads/slips/<?= urlencode($row["payment_slip"]) ?>" target="_blank" rel="noopener">ดูสลิป</a>
+                            <?php else: ?>
+                                -
+                            <?php endif; ?>
+                        </td>
+                        <td>
+                            <select name="payment_status">
+                                <?php foreach ($validPaymentStatuses as $statusOption): ?>
+                                    <option value="<?= $statusOption ?>" <?= $row["payment_status"] === $statusOption ? "selected" : "" ?>>
+                                        <?= $statusOption ?>
+                                    </option>
+                                <?php endforeach; ?>
+                            </select>
+                        </td>
                         <td>
                             <input type="hidden" name="id" value="<?= $row["id"] ?>">
                             <button type="submit" name="update_booking">บันทึก</button>
@@ -113,7 +137,5 @@ $result = $conn->query("SELECT * FROM bookings ORDER BY id ASC");
 </div>
 
 <?php require_once "includes/footer.php"; ?>
-
-<script src="assets/js/navbar.js"></script>
 </body>
 </html>

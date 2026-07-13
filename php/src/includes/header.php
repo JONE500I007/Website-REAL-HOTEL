@@ -41,6 +41,9 @@ require_once __DIR__ . '/functions.php';
                             ?>
                             <a href="manage_hotels.php"><?= $nav_hasHotel ? "แก้ไขโรงแรม" : "เพิ่มโรงแรม" ?></a>
                         <?php endif; ?>
+                        <?php if ($_SESSION["role"] === "owner" && $nav_hasHotel): ?>
+                            <a href="dashboard_owner.php">ตรวจสอบการจองของโรงแรม</a>
+                        <?php endif; ?>
                         <?php if ($_SESSION["role"] === "admin"): ?>
                             <a href="admin_manage.php">จัดการระบบ</a>
                         <?php endif; ?>

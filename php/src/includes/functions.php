@@ -58,6 +58,7 @@ function get_room_availability(mysqli $conn, int $room_type_id, string $checkin,
           ON b.room_type_id = rt.id
          AND b.checkin < ?
          AND b.checkout > ?
+         AND b.payment_status <> 'rejected'
         WHERE rt.id = ?
         GROUP BY rt.id, rt.quantity
     ");
@@ -67,4 +68,37 @@ function get_room_availability(mysqli $conn, int $room_type_id, string $checkin,
     $stmt->close();
 
     return $row ? (int) $row['available'] : 0;
+}
+
+// Validates and stores an uploaded payment slip image. Unlike
+// save_cropped_image(), the input here is a raw $_FILES entry, so we check
+// upload_err, a real MIME/dimension sniff via getimagesize(), and a size cap
+// before writing anything to disk.
+function save_payment_slip(array $file, string $destDir): string|false {
+    if (($file['error'] ?? UPLOAD_ERR_NO_FILE) !== UPLOAD_ERR_OK) {
+        return false;
+    }
+    if ($file['size'] > 5 * 1024 * 1024) {
+        return false;
+    }
+    if (!is_uploaded_file($file['tmp_name'])) {
+        return false;
+    }
+
+    $info = getimagesize($file['tmp_name']);
+    $allowedMime = ['image/jpeg' => 'jpg', 'image/png' => 'png'];
+    if ($info === false || !isset($allowedMime[$info['mime']])) {
+        return false;
+    }
+
+    if (!is_dir($destDir)) {
+        mkdir($destDir, 0777, true);
+    }
+
+    $filename = uniqid('slip_') . '.' . $allowedMime[$info['mime']];
+    if (!move_uploaded_file($file['tmp_name'], $destDir . $filename)) {
+        return false;
+    }
+
+    return $filename;
 }
