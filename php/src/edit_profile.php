@@ -97,6 +97,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
     <link rel="icon" type="image/png" href="image/hotel-icon-coupon-codes-hotel.png">
     <link rel="stylesheet" href="assets/css/style2.css?v=<?= filemtime(__DIR__ . '/assets/css/style2.css') ?>">
     <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@400;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.1/cropper.min.css">
 </head>
 <body>
@@ -113,7 +114,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                      src="<?= htmlspecialchars(resolve_upload_src($user['profile_picture'])) ?>"
                      alt="Profile">
                 <div class="avatar-overlay">
-                    <span>📷 เปลี่ยนรูป</span>
+                    <span><span class="material-symbols-outlined">photo_camera</span> เปลี่ยนรูป</span>
                 </div>
             </div>
             <input type="file" id="fileInput" accept="image/*" style="display:none">
@@ -126,14 +127,14 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
         <div class="profile-form-card">
             <div class="profile-form-header">
                 <h2>แก้ไขข้อมูลส่วนตัว</h2>
-                <a href="index.php" class="profile-back-link">← กลับหน้าหลัก</a>
+                <a href="index.php" class="profile-back-link"><span class="material-symbols-outlined">arrow_back</span> กลับหน้าหลัก</a>
             </div>
 
             <?php foreach ($errors as $error): ?>
-                <div class="alert alert-danger">⚠ <?= htmlspecialchars($error) ?></div>
+                <div class="alert alert-danger"><span class="material-symbols-outlined">warning</span> <?= htmlspecialchars($error) ?></div>
             <?php endforeach; ?>
             <?php if ($success): ?>
-                <div class="alert alert-success">✓ อัปเดตข้อมูลเรียบร้อยแล้ว!</div>
+                <div class="alert alert-success"><span class="material-symbols-outlined">check_circle</span> อัปเดตข้อมูลเรียบร้อยแล้ว!</div>
             <?php endif; ?>
 
             <form action="edit_profile.php" method="post" enctype="multipart/form-data" class="auth-form">
@@ -142,7 +143,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                 <div class="field-group">
                     <label>ชื่อ - สกุล</label>
                     <div class="field-wrap">
-                        <span class="field-icon">👤</span>
+                        <span class="field-icon material-symbols-outlined">person</span>
                         <input type="text" name="full_name" placeholder="ชื่อ-สกุล"
                                value="<?= htmlspecialchars($user['full_name']) ?>">
                     </div>
@@ -150,7 +151,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                 <div class="field-group">
                     <label>อีเมล</label>
                     <div class="field-wrap">
-                        <span class="field-icon">✉</span>
+                        <span class="field-icon material-symbols-outlined">mail</span>
                         <input type="email" name="email" placeholder="อีเมล"
                                value="<?= htmlspecialchars($user['email']) ?>">
                     </div>
@@ -158,14 +159,14 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                 <div class="field-group">
                     <label>เบอร์โทรศัพท์</label>
                     <div class="field-wrap" id="phoneWrap">
-                        <span class="field-icon">📱</span>
+                        <span class="field-icon material-symbols-outlined">call</span>
                         <input type="tel" name="phone_number" id="phoneInput"
                                inputmode="numeric"
                                autocomplete="tel"
                                placeholder="0XX-XXX-XXXX"
                                maxlength="12"
                                value="<?= htmlspecialchars(formatPhone($user['phone_number'])) ?>">
-                        <span class="phone-status" id="phoneStatus"></span>
+                        <span class="phone-status material-symbols-outlined" id="phoneStatus"></span>
                     </div>
                     <span class="field-hint">กรอกเบอร์ 10 หลัก เช่น 081-234-5678</span>
                 </div>
@@ -173,14 +174,14 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                 <div class="field-group">
                     <label>รหัสผ่านใหม่ <span style="font-weight:400;color:#aaa;font-size:12px">(เว้นว่างไว้หากไม่เปลี่ยน)</span></label>
                     <div class="field-wrap password-wrapper">
-                        <span class="field-icon">🔑</span>
+                        <span class="field-icon material-symbols-outlined">lock</span>
                         <input type="password" name="new_password" id="new_password" placeholder="รหัสผ่านใหม่">
                         <img src="image/hide.png" class="toggle-password" id="togglePassword" alt="toggle">
                     </div>
                 </div>
                 <?php endif; ?>
 
-                <button type="submit" class="auth-btn">💾 บันทึกการเปลี่ยนแปลง</button>
+                <button type="submit" class="auth-btn"><span class="material-symbols-outlined">save</span> บันทึกการเปลี่ยนแปลง</button>
             </form>
         </div>
     </div>
@@ -190,15 +191,15 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
 <div id="cropModal" class="crop-modal" style="display:none">
     <div class="crop-modal-box">
         <div class="crop-modal-header">
-            <h3>✂️ ครอบตัดรูปโปรไฟล์</h3>
-            <button class="crop-close-btn" id="cropClose">✕</button>
+            <h3><span class="material-symbols-outlined">crop</span> ครอบตัดรูปโปรไฟล์</h3>
+            <button class="crop-close-btn" id="cropClose"><span class="material-symbols-outlined">close</span></button>
         </div>
         <div class="crop-canvas-wrap">
             <img id="cropImage" src="" alt="crop">
         </div>
         <div class="crop-modal-footer">
             <button class="crop-btn-cancel" id="cropCancel">ยกเลิก</button>
-            <button class="crop-btn-confirm" id="cropConfirm">✓ ยืนยันการครอบ</button>
+            <button class="crop-btn-confirm" id="cropConfirm"><span class="material-symbols-outlined">check</span> ยืนยันการครอบ</button>
         </div>
     </div>
 </div>
@@ -231,10 +232,10 @@ document.addEventListener("DOMContentLoaded", function () {
         if (empty) return;
         if (valid) {
             phoneWrap.classList.add('field-valid');
-            phoneStatus.textContent = '✓';
+            phoneStatus.textContent = 'check_circle';
         } else {
             phoneWrap.classList.add('field-error');
-            phoneStatus.textContent = '✗';
+            phoneStatus.textContent = 'cancel';
         }
     }
 

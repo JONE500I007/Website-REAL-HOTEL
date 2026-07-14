@@ -11,6 +11,7 @@ require_once "config/database.php";
     <link rel="icon" type="image/png" href="image/hotel-icon-coupon-codes-hotel.png">
     <link rel="stylesheet" href="assets/css/style2.css?v=<?= filemtime(__DIR__ . '/assets/css/style2.css') ?>">
     <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@400;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" rel="stylesheet">
 </head>
 <body>
 
@@ -31,9 +32,9 @@ require_once "config/database.php";
             <p><b>สถานศึกษา:</b> มหาวิทยาลัยราชภัฏเลย ปี 4</p>
 
             <h3>MY CONTACT</h3>
-            <p>📘 Facebook: <a href="https://www.facebook.com/bennett.impact.2025/">Bennett Impact</a></p>
-            <p>📧 Email: <a href="Ingkawat2023Reals@gmail.com">Ingkawat2023Reals@gmail.com</a></p>
-            <p>📱 Phone: <a href="tel:0973199931">097-319-9931</a></p>
+            <p><span class="material-symbols-outlined">link</span> Facebook: <a href="https://www.facebook.com/bennett.impact.2025/">Bennett Impact</a></p>
+            <p><span class="material-symbols-outlined">mail</span> Email: <a href="Ingkawat2023Reals@gmail.com">Ingkawat2023Reals@gmail.com</a></p>
+            <p><span class="material-symbols-outlined">call</span> Phone: <a href="tel:0973199931">097-319-9931</a></p>
         </div>
     </div>
 </section>

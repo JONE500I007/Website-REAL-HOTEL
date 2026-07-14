@@ -9,12 +9,13 @@ if (!isset($_SESSION["user_id"])) {
 
 $user_email = $_SESSION["user_email"] ?? "";
 $stmt = $conn->prepare("
-    SELECT id, first_name, last_name, email, phone,
-           checkin, checkout, guests, book_hotel_name,
-           total_price, payment_status
-    FROM bookings
-    WHERE email = ?
-    ORDER BY id DESC
+    SELECT b.id, b.first_name, b.last_name, b.email, b.phone,
+           b.checkin, b.checkout, b.guests, b.book_hotel_name,
+           b.total_price, b.payment_status, rt.room_name
+    FROM bookings b
+    LEFT JOIN room_types rt ON rt.id = b.room_type_id
+    WHERE b.email = ?
+    ORDER BY b.id DESC
 ");
 $stmt->bind_param("s", $user_email);
 $stmt->execute();
@@ -30,6 +31,7 @@ $stmt->close();
     <link rel="icon" type="image/png" href="image/hotel-icon-coupon-codes-hotel.png">
     <link rel="stylesheet" href="assets/css/style2.css?v=<?= filemtime(__DIR__ . '/assets/css/style2.css') ?>">
     <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@400;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" rel="stylesheet">
 </head>
 <body>
 
@@ -38,19 +40,19 @@ $stmt->close();
 <div class="board-page">
     <div class="board-header">
         <div>
-            <h1>📋 รายการจองของคุณ</h1>
+            <h1><span class="material-symbols-outlined">receipt_long</span> รายการจองของคุณ</h1>
             <p>ประวัติการจองโรงแรมทั้งหมดของ <?= htmlspecialchars($_SESSION['user']) ?></p>
         </div>
-        <a href="index.php" class="board-back-btn">🏠 หน้าหลัก</a>
+        <a href="index.php" class="board-back-btn"><span class="material-symbols-outlined">home</span> หน้าหลัก</a>
     </div>
 
     <?php if ($result && $result->num_rows > 0): ?>
         <div class="booking-cards">
             <?php
             $paymentStatusLabels = [
-                'pending_verification' => ['label' => '⏳ รอตรวจสอบการชำระเงิน', 'color' => '#b8860b'],
-                'confirmed'             => ['label' => '✅ ยืนยันการจองแล้ว',       'color' => '#2e7d32'],
-                'rejected'              => ['label' => '❌ การชำระเงินถูกปฏิเสธ',    'color' => '#c62828'],
+                'pending_verification' => ['label' => 'รอตรวจสอบการชำระเงิน', 'icon' => 'hourglass_top',  'color' => '#b8860b'],
+                'confirmed'             => ['label' => 'ยืนยันการจองแล้ว',      'icon' => 'check_circle',   'color' => '#2e7d32'],
+                'rejected'              => ['label' => 'การชำระเงินถูกปฏิเสธ',   'icon' => 'cancel',         'color' => '#c62828'],
             ];
             while ($row = $result->fetch_assoc()):
                 $checkin  = $row['checkin']  ? new DateTime($row['checkin'])  : null;
@@ -61,14 +63,14 @@ $stmt->close();
             <div class="booking-card">
                 <div class="booking-card-top">
                     <div class="booking-hotel-name">
-                        🏨 <?= htmlspecialchars($row['book_hotel_name'] ?? 'ไม่ระบุโรงแรม') ?>
+                        <span class="material-symbols-outlined">hotel</span> <?= htmlspecialchars($row['book_hotel_name'] ?? 'ไม่ระบุโรงแรม') ?>
                     </div>
                     <div class="booking-nights-badge"><?= $nights ?> คืน</div>
                 </div>
                 <div class="booking-card-body">
                     <div class="booking-payment-status">
                         <span class="payment-status-label" style="color:<?= $status['color'] ?>;">
-                            <?= $status['label'] ?>
+                            <span class="material-symbols-outlined"><?= $status['icon'] ?></span> <?= $status['label'] ?>
                         </span>
                         <?php if ((float) $row['total_price'] > 0): ?>
                             <span class="payment-status-total">
@@ -82,7 +84,7 @@ $stmt->close();
                             <span class="date-label">เช็คอิน</span>
                             <span class="date-value"><?= $checkin  ? $checkin->format('d M Y')  : '-' ?></span>
                         </div>
-                        <div class="booking-date-arrow">→</div>
+                        <div class="booking-date-arrow material-symbols-outlined">arrow_forward</div>
                         <div class="booking-date-box">
                             <span class="date-label">เช็คเอาท์</span>
                             <span class="date-value"><?= $checkout ? $checkout->format('d M Y') : '-' ?></span>
@@ -91,28 +93,35 @@ $stmt->close();
 
                     <div class="booking-info-grid">
                         <div class="booking-info-item">
-                            <span class="info-icon">👤</span>
+                            <span class="info-icon material-symbols-outlined">person</span>
                             <div>
                                 <span class="info-label">ผู้จอง</span>
                                 <span class="info-value"><?= htmlspecialchars($row['first_name'] . ' ' . $row['last_name']) ?></span>
                             </div>
                         </div>
                         <div class="booking-info-item">
-                            <span class="info-icon">✉</span>
+                            <span class="info-icon material-symbols-outlined">mail</span>
                             <div>
                                 <span class="info-label">อีเมล</span>
                                 <span class="info-value"><?= htmlspecialchars($row['email']) ?></span>
                             </div>
                         </div>
                         <div class="booking-info-item">
-                            <span class="info-icon">📱</span>
+                            <span class="info-icon material-symbols-outlined">call</span>
                             <div>
                                 <span class="info-label">เบอร์โทร</span>
                                 <span class="info-value"><?= htmlspecialchars($row['phone']) ?></span>
                             </div>
                         </div>
                         <div class="booking-info-item">
-                            <span class="info-icon">🛏</span>
+                            <span class="info-icon material-symbols-outlined">bed</span>
+                            <div>
+                                <span class="info-label">ห้องที่จอง</span>
+                                <span class="info-value"><?= htmlspecialchars($row['room_name'] ?? 'ไม่ระบุห้อง') ?></span>
+                            </div>
+                        </div>
+                        <div class="booking-info-item">
+                            <span class="info-icon material-symbols-outlined">group</span>
                             <div>
                                 <span class="info-label">จำนวนผู้เข้าพัก</span>
                                 <span class="info-value"><?= htmlspecialchars($row['guests']) ?> คน</span>
@@ -125,7 +134,7 @@ $stmt->close();
         </div>
     <?php else: ?>
         <div class="board-empty">
-            <div class="board-empty-icon">🏨</div>
+            <div class="board-empty-icon material-symbols-outlined">hotel</div>
             <h3>ยังไม่มีการจองโรงแรม</h3>
             <p>เริ่มค้นหาและจองโรงแรมที่คุณชื่นชอบได้เลย</p>
             <a href="hotel.php" class="auth-btn" style="display:inline-block;width:auto;padding:12px 30px;text-decoration:none;">ค้นหาโรงแรม</a>

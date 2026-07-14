@@ -46,6 +46,7 @@ $result = $conn->query("SELECT * FROM users ORDER BY id ASC");
     <link rel="icon" type="image/png" href="image/hotel-icon-coupon-codes-hotel.png">
     <link rel="stylesheet" href="assets/css/style2.css?v=<?= filemtime(__DIR__ . '/assets/css/style2.css') ?>">
     <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@400;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" rel="stylesheet">
 </head>
 <body>
 
@@ -97,7 +98,7 @@ $result = $conn->query("SELECT * FROM users ORDER BY id ASC");
     </table>
 
     <div class="booking-back">
-        <a href="admin_manage.php">⬅ กลับเมนู Admin</a>
+        <a href="admin_manage.php"><span class="material-symbols-outlined">arrow_back</span> กลับเมนู Admin</a>
     </div>
 </div>
 

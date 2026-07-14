@@ -303,6 +303,7 @@ if (isset($_GET["edit_room"])) {
     <link rel="icon" type="image/png" href="image/hotel-icon-coupon-codes-hotel.png">
     <link rel="stylesheet" href="assets/css/style2.css?v=<?= filemtime(__DIR__ . '/assets/css/style2.css') ?>">
     <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@400;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" rel="stylesheet">
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.1/cropper.min.css">
 </head>
@@ -329,7 +330,7 @@ if (isset($_GET["edit_room"])) {
                 <div class="field-group">
                     <label>ชื่อโรงแรม</label>
                     <div class="field-wrap">
-                        <span class="field-icon">🏨</span>
+                        <span class="field-icon material-symbols-outlined">hotel</span>
                         <input type="text" name="hotel_name" placeholder="ชื่อโรงแรม"
                                value="<?= htmlspecialchars($hotel["hotel_name"]) ?>">
                     </div>
@@ -347,7 +348,7 @@ if (isset($_GET["edit_room"])) {
             <div class="field-group">
                 <label>ที่ตั้ง</label>
                 <div class="field-wrap">
-                    <span class="field-icon">📍</span>
+                    <span class="field-icon material-symbols-outlined">location_on</span>
                     <input type="text" name="location" id="locationInput" placeholder="ที่ตั้ง"
                            value="<?= htmlspecialchars($hotel["location"]) ?>">
                 </div>
@@ -356,7 +357,7 @@ if (isset($_GET["edit_room"])) {
             <div class="map-card">
                 <div class="map-search-row">
                     <div class="field-wrap">
-                        <span class="field-icon">🔍</span>
+                        <span class="field-icon material-symbols-outlined">search</span>
                         <input type="text" id="mapSearch" placeholder="พิมพ์ชื่อสถานที่หรือที่อยู่ เช่น มอ.ปัตตานี">
                     </div>
                 </div>
@@ -373,7 +374,7 @@ if (isset($_GET["edit_room"])) {
             <div class="field-group">
                 <label>รายละเอียด</label>
                 <div class="field-wrap">
-                    <span class="field-icon">📝</span>
+                    <span class="field-icon material-symbols-outlined">description</span>
                     <input type="text" name="description" placeholder="รายละเอียด"
                            value="<?= htmlspecialchars($hotel["description"]) ?>">
                 </div>
@@ -381,7 +382,7 @@ if (isset($_GET["edit_room"])) {
             <div class="field-group">
                 <label>สิ่งอำนวยความสะดวก (คั่นด้วย ,)</label>
                 <div class="field-wrap">
-                    <span class="field-icon">🛎</span>
+                    <span class="field-icon material-symbols-outlined">room_service</span>
                     <input type="text" name="facilities" placeholder="สิ่งอำนวยความสะดวก (คั่นด้วย ,)"
                            value="<?= htmlspecialchars($hotel["facilities"]) ?>">
                 </div>
@@ -389,7 +390,7 @@ if (isset($_GET["edit_room"])) {
             <div class="field-group">
                 <label>บริเวณโดยรอบ (คั่นด้วย ,)</label>
                 <div class="field-wrap">
-                    <span class="field-icon">🗺</span>
+                    <span class="field-icon material-symbols-outlined">map</span>
                     <input type="text" name="surrounding" placeholder="บริเวณโดยรอบ (คั่นด้วย ,)"
                            value="<?= htmlspecialchars($hotel["surrounding"]) ?>">
                 </div>
@@ -407,7 +408,7 @@ if (isset($_GET["edit_room"])) {
                     <?php endforeach; ?>
                 </div>
                 <?php endif; ?>
-                <div class="room-upload-dropzone" id="hotelDropzone">📷 คลิกเพื่อเลือกรูปภาพ (เลือกได้หลายรูป พร้อมครอบตัด)</div>
+                <div class="room-upload-dropzone" id="hotelDropzone"><span class="material-symbols-outlined">add_photo_alternate</span> คลิกเพื่อเลือกรูปภาพ (เลือกได้หลายรูป พร้อมครอบตัด)</div>
                 <input type="file" id="hotelFileInput" accept="image/*" multiple style="display:none">
                 <div class="room-thumb-strip" id="hotelThumbStrip"></div>
                 <input type="hidden" name="cropped_hotel_images_json" id="croppedHotelImagesJson">
@@ -443,12 +444,12 @@ if (isset($_GET["edit_room"])) {
             ?>
                 <div class="room-type-card<?= $isEditingThis ? ' editing-room' : '' ?>">
                     <?php if ($isEditingThis): ?>
-                        <span class="editing-badge">✏ กำลังแก้ไข</span>
+                        <span class="editing-badge"><span class="material-symbols-outlined">edit</span> กำลังแก้ไข</span>
                     <?php endif; ?>
                     <img src="<?= htmlspecialchars($room['images'][0]['image_path'] ?? 'image/641151494.jpg') ?>" alt="<?= htmlspecialchars($room['room_name']) ?>">
                     <div class="card-content">
                         <h4><?= htmlspecialchars($room['room_name']) ?></h4>
-                        <span class="capacity-badge">👤 x <?= (int) $room['capacity'] ?></span>
+                        <span class="capacity-badge"><span class="material-symbols-outlined">person</span> x <?= (int) $room['capacity'] ?></span>
                         <span>เหลือ <?= (int) $room['quantity'] ?> ห้อง</span>
                         <span class="room-price">฿<?= htmlspecialchars($room['price_per_night']) ?> / คืน</span>
                         <div class="room-actions">
@@ -474,7 +475,7 @@ if (isset($_GET["edit_room"])) {
                 <div class="field-group">
                     <label>ชื่อห้อง</label>
                     <div class="field-wrap">
-                        <span class="field-icon">🛏</span>
+                        <span class="field-icon material-symbols-outlined">bed</span>
                         <input type="text" name="room_name" placeholder="เช่น ห้องมาตรฐาน เตียงคู่"
                                value="<?= htmlspecialchars($editingRoom['room_name'] ?? '') ?>">
                     </div>
@@ -482,7 +483,7 @@ if (isset($_GET["edit_room"])) {
                 <div class="field-group">
                     <label>จำนวนผู้เข้าพักสูงสุด</label>
                     <div class="field-wrap">
-                        <span class="field-icon">👤</span>
+                        <span class="field-icon material-symbols-outlined">person</span>
                         <input type="number" name="capacity" min="1" placeholder="เช่น 2"
                                value="<?= htmlspecialchars($editingRoom['capacity'] ?? '') ?>">
                     </div>
@@ -501,7 +502,7 @@ if (isset($_GET["edit_room"])) {
                 <div class="field-group">
                     <label>จำนวนห้องทั้งหมด</label>
                     <div class="field-wrap">
-                        <span class="field-icon">🔢</span>
+                        <span class="field-icon material-symbols-outlined">numbers</span>
                         <input type="number" name="quantity" min="1" placeholder="เช่น 5"
                                value="<?= htmlspecialchars($editingRoom['quantity'] ?? '') ?>">
                     </div>
@@ -511,7 +512,7 @@ if (isset($_GET["edit_room"])) {
             <div class="field-group">
                 <label>รายละเอียดห้อง</label>
                 <div class="field-wrap">
-                    <span class="field-icon">📝</span>
+                    <span class="field-icon material-symbols-outlined">description</span>
                     <input type="text" name="room_description" placeholder="รายละเอียดห้องพัก"
                            value="<?= htmlspecialchars($editingRoom['description'] ?? '') ?>">
                 </div>
@@ -519,7 +520,7 @@ if (isset($_GET["edit_room"])) {
             <div class="field-group">
                 <label>สิ่งอำนวยความสะดวกในห้อง (คั่นด้วย ,)</label>
                 <div class="field-wrap">
-                    <span class="field-icon">🛎</span>
+                    <span class="field-icon material-symbols-outlined">room_service</span>
                     <input type="text" name="amenities" placeholder="เช่น แอร์, ทีวี, ตู้เย็น"
                            value="<?= htmlspecialchars($editingRoom['amenities'] ?? '') ?>">
                 </div>
@@ -542,7 +543,7 @@ if (isset($_GET["edit_room"])) {
 
             <div class="field-group">
                 <label>เพิ่มรูปภาพห้องพัก (เลือกได้หลายรูป พร้อมครอบตัด)</label>
-                <div class="room-upload-dropzone" id="roomDropzone">📷 คลิกเพื่อเลือกรูปภาพ</div>
+                <div class="room-upload-dropzone" id="roomDropzone"><span class="material-symbols-outlined">add_photo_alternate</span> คลิกเพื่อเลือกรูปภาพ</div>
                 <input type="file" id="roomFileInput" accept="image/*" multiple style="display:none">
                 <div class="room-thumb-strip" id="roomThumbStrip"></div>
                 <input type="hidden" name="cropped_images_json" id="croppedImagesJson">
@@ -570,8 +571,8 @@ if (isset($_GET["edit_room"])) {
 <div id="imageCropModal" class="crop-modal" style="display:none">
     <div class="crop-modal-box">
         <div class="crop-modal-header">
-            <h3>✂️ ครอบตัดรูปภาพ</h3>
-            <button type="button" class="crop-close-btn" id="cropClose2">✕</button>
+            <h3><span class="material-symbols-outlined">crop</span> ครอบตัดรูปภาพ</h3>
+            <button type="button" class="crop-close-btn" id="cropClose2"><span class="material-symbols-outlined">close</span></button>
         </div>
         <div class="crop-canvas-wrap">
             <img id="cropImage2" src="" alt="crop">
@@ -587,7 +588,7 @@ if (isset($_GET["edit_room"])) {
         </div>
         <div class="crop-modal-footer">
             <button type="button" class="crop-btn-cancel" id="cropCancel2">ข้ามรูปนี้</button>
-            <button type="button" class="crop-btn-confirm" id="cropConfirm2">✓ ยืนยันการครอบ</button>
+            <button type="button" class="crop-btn-confirm" id="cropConfirm2"><span class="material-symbols-outlined">check</span> ยืนยันการครอบ</button>
         </div>
     </div>
 </div>

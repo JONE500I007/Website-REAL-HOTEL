@@ -62,9 +62,9 @@ if ($hotel) {
 }
 
 $statusMeta = [
-    'pending_verification' => ['label' => '⏳ รอตรวจสอบ', 'class' => 'status-pending'],
-    'confirmed'             => ['label' => '✅ ยืนยันแล้ว', 'class' => 'status-confirmed'],
-    'rejected'              => ['label' => '❌ ปฏิเสธแล้ว', 'class' => 'status-rejected'],
+    'pending_verification' => ['label' => 'รอตรวจสอบ', 'icon' => 'hourglass_top',  'class' => 'status-pending'],
+    'confirmed'             => ['label' => 'ยืนยันแล้ว', 'icon' => 'check_circle',   'class' => 'status-confirmed'],
+    'rejected'              => ['label' => 'ปฏิเสธแล้ว', 'icon' => 'cancel',         'class' => 'status-rejected'],
 ];
 ?>
 <!DOCTYPE html>
@@ -76,6 +76,7 @@ $statusMeta = [
     <link rel="icon" type="image/png" href="image/hotel-icon-coupon-codes-hotel.png">
     <link rel="stylesheet" href="assets/css/style2.css?v=<?= filemtime(__DIR__ . '/assets/css/style2.css') ?>">
     <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@400;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" rel="stylesheet">
 </head>
 <body>
 
@@ -84,15 +85,13 @@ $statusMeta = [
 <div class="board-page">
     <div class="board-header">
         <div>
-            <h1>🧾 ตรวจสอบการจอง<?= $hotel ? ' — ' . htmlspecialchars($hotel["hotel_name"]) : '' ?></h1>
-            <p>
-                <?= $hotel ? 'รายการจองและหลักฐานการชำระเงินของโรงแรมคุณ' : 'คุณยังไม่มีโรงแรมในระบบ' ?>
-                <?php if ($pendingCount > 0): ?>
-                    <span class="owner-pending-pill">รอตรวจสอบ <?= $pendingCount ?></span>
-                <?php endif; ?>
-            </p>
+            <h1><span class="material-symbols-outlined">fact_check</span> ตรวจสอบการจอง<?= $hotel ? ' — ' . htmlspecialchars($hotel["hotel_name"]) : '' ?></h1>
+            <p><?= $hotel ? 'รายการจองและหลักฐานการชำระเงินของโรงแรมคุณ' : 'คุณยังไม่มีโรงแรมในระบบ' ?></p>
+            <?php if ($pendingCount > 0): ?>
+                <span class="owner-pending-pill">รอตรวจสอบ <?= $pendingCount ?></span>
+            <?php endif; ?>
         </div>
-        <a href="index.php" class="board-back-btn">🏠 หน้าหลัก</a>
+        <a href="index.php" class="board-back-btn"><span class="material-symbols-outlined">home</span> หน้าหลัก</a>
     </div>
 
     <?php if (!empty($msg)): ?>
@@ -101,14 +100,14 @@ $statusMeta = [
 
     <?php if (!$hotel): ?>
         <div class="board-empty">
-            <div class="board-empty-icon">🏨</div>
+            <div class="board-empty-icon material-symbols-outlined">hotel</div>
             <h3>ยังไม่มีโรงแรมของคุณ</h3>
             <p>เพิ่มโรงแรมก่อนเพื่อเริ่มรับการจอง</p>
             <a href="manage_hotels.php" class="auth-btn" style="display:inline-block;width:auto;padding:12px 30px;text-decoration:none;">เพิ่มโรงแรม</a>
         </div>
     <?php elseif (empty($bookings)): ?>
         <div class="board-empty">
-            <div class="board-empty-icon">📭</div>
+            <div class="board-empty-icon material-symbols-outlined">inbox</div>
             <h3>ยังไม่มีการจอง</h3>
             <p>เมื่อมีลูกค้าจองโรงแรมของคุณ รายการจะปรากฏที่นี่</p>
         </div>
@@ -120,50 +119,52 @@ $statusMeta = [
             <div class="booking-card">
                 <div class="booking-card-top">
                     <div class="booking-hotel-name">
-                        👤 <?= htmlspecialchars($row["first_name"] . ' ' . $row["last_name"]) ?>
+                        <span class="material-symbols-outlined">person</span> <?= htmlspecialchars($row["first_name"] . ' ' . $row["last_name"]) ?>
                     </div>
-                    <div class="booking-nights-badge owner-status-badge <?= $status['class'] ?>"><?= $status['label'] ?></div>
+                    <div class="booking-nights-badge owner-status-badge <?= $status['class'] ?>">
+                        <span class="material-symbols-outlined"><?= $status['icon'] ?></span> <?= $status['label'] ?>
+                    </div>
                 </div>
 
                 <div class="booking-card-body">
                     <div class="booking-info-grid">
                         <div class="booking-info-item">
-                            <span class="info-icon">🛏</span>
+                            <span class="info-icon material-symbols-outlined">bed</span>
                             <div>
                                 <span class="info-label">ห้อง</span>
                                 <span class="info-value"><?= htmlspecialchars($row["room_name"] ?? 'ไม่ระบุ') ?></span>
                             </div>
                         </div>
                         <div class="booking-info-item">
-                            <span class="info-icon">📅</span>
+                            <span class="info-icon material-symbols-outlined">calendar_month</span>
                             <div>
                                 <span class="info-label">เช็คอิน → เช็คเอาท์</span>
                                 <span class="info-value"><?= htmlspecialchars($row["checkin"]) ?> → <?= htmlspecialchars($row["checkout"]) ?></span>
                             </div>
                         </div>
                         <div class="booking-info-item">
-                            <span class="info-icon">✉</span>
+                            <span class="info-icon material-symbols-outlined">mail</span>
                             <div>
                                 <span class="info-label">อีเมล</span>
                                 <span class="info-value"><?= htmlspecialchars($row["email"]) ?></span>
                             </div>
                         </div>
                         <div class="booking-info-item">
-                            <span class="info-icon">📱</span>
+                            <span class="info-icon material-symbols-outlined">call</span>
                             <div>
                                 <span class="info-label">โทรศัพท์</span>
                                 <span class="info-value"><?= htmlspecialchars($row["phone"]) ?></span>
                             </div>
                         </div>
                         <div class="booking-info-item">
-                            <span class="info-icon">👥</span>
+                            <span class="info-icon material-symbols-outlined">group</span>
                             <div>
                                 <span class="info-label">ผู้เข้าพัก</span>
                                 <span class="info-value"><?= (int) $row["guests"] ?> คน</span>
                             </div>
                         </div>
                         <div class="booking-info-item">
-                            <span class="info-icon">💰</span>
+                            <span class="info-icon material-symbols-outlined">payments</span>
                             <div>
                                 <span class="info-label">ยอดชำระ</span>
                                 <span class="info-value">฿<?= number_format((float) $row["total_price"], 2) ?></span>
@@ -185,7 +186,7 @@ $statusMeta = [
                             <?php foreach ($statusMeta as $value => $meta): ?>
                                 <button type="submit" name="payment_status" value="<?= $value ?>"
                                         class="status-btn <?= $meta['class'] ?><?= $row["payment_status"] === $value ? ' active' : '' ?>">
-                                    <?= $meta['label'] ?>
+                                    <span class="material-symbols-outlined"><?= $meta['icon'] ?></span> <?= $meta['label'] ?>
                                 </button>
                             <?php endforeach; ?>
                         </form>

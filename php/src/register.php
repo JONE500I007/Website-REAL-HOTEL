@@ -69,6 +69,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
     <link rel="icon" type="image/png" href="image/hotel-icon-coupon-codes-hotel.png">
     <link rel="stylesheet" href="assets/css/style2.css?v=<?= filemtime(__DIR__ . '/assets/css/style2.css') ?>">
     <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@400;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" rel="stylesheet">
 </head>
 <body>
 
@@ -82,34 +83,34 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
         <h1>ยินดีต้อนรับ<br>สู่ JustHottel</h1>
         <p>สร้างบัญชีเพื่อค้นหาและจองโรงแรมที่ดีที่สุดในจังหวัดปัตตานี</p>
         <div class="auth-panel-badges">
-            <span>🏨 โรงแรมคัดสรร</span>
-            <span>⭐ รีวิวจริง</span>
-            <span>🔒 ปลอดภัย</span>
+            <span><span class="material-symbols-outlined">hotel</span> โรงแรมคัดสรร</span>
+            <span><span class="material-symbols-outlined">star</span> รีวิวจริง</span>
+            <span><span class="material-symbols-outlined">lock</span> ปลอดภัย</span>
         </div>
-        <a href="index.php" class="auth-back-link">← กลับหน้าหลัก</a>
+        <a href="index.php" class="auth-back-link"><span class="material-symbols-outlined">arrow_back</span> กลับหน้าหลัก</a>
     </div>
 
     <!-- Right form panel -->
     <div class="auth-form-side">
         <div class="auth-form-box">
             <div class="auth-form-header">
-                <a href="index.php" class="auth-form-back">← กลับหน้าหลัก</a>
+                <a href="index.php" class="auth-form-back"><span class="material-symbols-outlined">arrow_back</span> กลับหน้าหลัก</a>
                 <h2>สมัครสมาชิก</h2>
                 <p>มีบัญชีแล้ว? <a href="login.php">เข้าสู่ระบบ</a></p>
             </div>
 
             <?php foreach ($errors as $error): ?>
-                <div class="alert alert-danger">⚠ <?= htmlspecialchars($error) ?></div>
+                <div class="alert alert-danger"><span class="material-symbols-outlined">warning</span> <?= htmlspecialchars($error) ?></div>
             <?php endforeach; ?>
 
             <?php if ($success): ?>
-                <div class="alert alert-success">✓ สมัครสมาชิกเรียบร้อยแล้ว! <a href="login.php">เข้าสู่ระบบเลย →</a></div>
+                <div class="alert alert-success"><span class="material-symbols-outlined">check_circle</span> สมัครสมาชิกเรียบร้อยแล้ว! <a href="login.php">เข้าสู่ระบบเลย <span class="material-symbols-outlined">arrow_forward</span></a></div>
             <?php else: ?>
                 <form action="register.php" method="post" class="auth-form">
                     <div class="field-group">
                         <label>ชื่อ - สกุล</label>
                         <div class="field-wrap">
-                            <span class="field-icon">👤</span>
+                            <span class="field-icon material-symbols-outlined">person</span>
                             <input type="text" name="full_name" placeholder="กรอกชื่อ-สกุล"
                                    value="<?= htmlspecialchars($_POST["full_name"] ?? '') ?>">
                         </div>
@@ -117,7 +118,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                     <div class="field-group">
                         <label>อีเมล</label>
                         <div class="field-wrap">
-                            <span class="field-icon">✉</span>
+                            <span class="field-icon material-symbols-outlined">mail</span>
                             <input type="email" name="email" placeholder="example@email.com"
                                    value="<?= htmlspecialchars($_POST["email"] ?? '') ?>">
                         </div>
@@ -125,21 +126,21 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                     <div class="field-group">
                         <label>เบอร์โทรศัพท์</label>
                         <div class="field-wrap" id="phoneWrap">
-                            <span class="field-icon">📱</span>
+                            <span class="field-icon material-symbols-outlined">call</span>
                             <input type="tel" name="phone_number" id="phoneInput"
                                    inputmode="numeric"
                                    autocomplete="tel"
                                    placeholder="0XX-XXX-XXXX"
                                    maxlength="12"
                                    value="<?= htmlspecialchars($_POST["phone_number"] ?? '') ?>">
-                            <span class="phone-status" id="phoneStatus"></span>
+                            <span class="phone-status material-symbols-outlined" id="phoneStatus"></span>
                         </div>
                         <span class="field-hint">กรอกเบอร์ 10 หลัก เช่น 081-234-5678</span>
                     </div>
                     <div class="field-group">
                         <label>รหัสผ่าน</label>
                         <div class="field-wrap password-wrapper">
-                            <span class="field-icon">🔑</span>
+                            <span class="field-icon material-symbols-outlined">lock</span>
                             <input type="password" name="password" id="password" placeholder="อย่างน้อย 4 ตัวอักษร">
                             <img src="image/hide.png" class="toggle-password" id="togglePassword1" alt="toggle">
                         </div>
@@ -147,7 +148,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                     <div class="field-group">
                         <label>ยืนยันรหัสผ่าน</label>
                         <div class="field-wrap password-wrapper">
-                            <span class="field-icon">🔑</span>
+                            <span class="field-icon material-symbols-outlined">lock</span>
                             <input type="password" name="repeat_password" id="repeat_password" placeholder="พิมพ์รหัสผ่านอีกครั้ง">
                             <img src="image/hide.png" class="toggle-password" id="togglePassword2" alt="toggle">
                         </div>
@@ -205,10 +206,10 @@ document.addEventListener("DOMContentLoaded", function () {
         if (empty) return;
         if (valid) {
             phoneWrap.classList.add('field-valid');
-            phoneStatus.textContent = '✓';
+            phoneStatus.textContent = 'check_circle';
         } else {
             phoneWrap.classList.add('field-error');
-            phoneStatus.textContent = '✗';
+            phoneStatus.textContent = 'cancel';
         }
     }
 

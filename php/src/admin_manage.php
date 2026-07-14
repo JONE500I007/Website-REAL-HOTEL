@@ -16,6 +16,7 @@ if (!isset($_SESSION["user_id"]) || $_SESSION["role"] !== "admin") {
     <link rel="icon" type="image/png" href="image/hotel-icon-coupon-codes-hotel.png">
     <link rel="stylesheet" href="assets/css/style2.css?v=<?= filemtime(__DIR__ . '/assets/css/style2.css') ?>">
     <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@400;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" rel="stylesheet">
 </head>
 <body>
 
@@ -36,7 +37,7 @@ if (!isset($_SESSION["user_id"]) || $_SESSION["role"] !== "admin") {
     </div>
 
     <div class="booking-back">
-        <a href="index.php">⬅ กลับหน้าหลัก</a>
+        <a href="index.php"><span class="material-symbols-outlined">arrow_back</span> กลับหน้าหลัก</a>
     </div>
 </div>
 

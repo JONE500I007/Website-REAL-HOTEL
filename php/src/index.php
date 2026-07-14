@@ -23,6 +23,7 @@ $result = $conn->query($sql);
     <link rel="icon" type="image/png" href="image/hotel-icon-coupon-codes-hotel.png">
     <link rel="stylesheet" href="assets/css/style2.css?v=<?= filemtime(__DIR__ . '/assets/css/style2.css') ?>">
     <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@400;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" rel="stylesheet">
 </head>
 <body>
 
@@ -49,7 +50,7 @@ $(document).ready(function () {
                                      </div>`;
                         });
                     } else {
-                        html = `<div class="no-result"><span>🔍</span> ไม่พบโรงแรมที่ตรงกับ "<strong>${query}</strong>"</div>`;
+                        html = `<div class="no-result"><span class="material-symbols-outlined">search</span> ไม่พบโรงแรมที่ตรงกับ "<strong>${query}</strong>"</div>`;
                     }
                     $("#searchResult").html(html).show();
                 }
@@ -87,7 +88,7 @@ document.addEventListener("DOMContentLoaded", function () {
         <p>พบโรงแรมที่เหมาะสมกับคุณในพื้นที่ที่คุณต้องการ</p>
         <form class="search-form" action="hotel.php" method="get">
             <div class="search-segment search-segment-main">
-                <span class="search-segment-icon">🔍</span>
+                <span class="search-segment-icon material-symbols-outlined">search</span>
                 <div class="search-segment-body">
                     <label>ค้นหา</label>
                     <div class="search-input-wrap">
@@ -98,7 +99,7 @@ document.addEventListener("DOMContentLoaded", function () {
             </div>
             <div class="search-divider"></div>
             <div class="search-segment">
-                <span class="search-segment-icon">📅</span>
+                <span class="search-segment-icon material-symbols-outlined">calendar_month</span>
                 <div class="search-segment-body">
                     <label>เช็คอิน</label>
                     <input type="date" id="searchCheckin" name="checkin">
@@ -106,7 +107,7 @@ document.addEventListener("DOMContentLoaded", function () {
             </div>
             <div class="search-divider"></div>
             <div class="search-segment">
-                <span class="search-segment-icon">📅</span>
+                <span class="search-segment-icon material-symbols-outlined">calendar_month</span>
                 <div class="search-segment-body">
                     <label>เช็คเอาท์</label>
                     <input type="date" id="searchCheckout" name="checkout">
@@ -114,7 +115,7 @@ document.addEventListener("DOMContentLoaded", function () {
             </div>
             <div class="search-divider"></div>
             <div class="search-segment search-segment-guests">
-                <span class="search-segment-icon">👤</span>
+                <span class="search-segment-icon material-symbols-outlined">person</span>
                 <div class="search-segment-body">
                     <label>ผู้เข้าพัก</label>
                     <input type="number" name="guests" min="1" value="2">
@@ -129,7 +130,7 @@ document.addEventListener("DOMContentLoaded", function () {
     <div class="container">
         <h2 class="section-title">โรงแรมยอดนิยมในอำเภอเมือง ปัตตานี</h2>
         <div class="hotel-list-wrapper">
-            <button class="scroll-btn left">⟨</button>
+            <button class="scroll-btn left"><span class="material-symbols-outlined">chevron_left</span></button>
             <div class="hotel-list">
                 <?php while ($row = $result->fetch_assoc()): ?>
                     <div class="hotel-card">
@@ -144,15 +145,15 @@ document.addEventListener("DOMContentLoaded", function () {
                     </div>
                 <?php endwhile; ?>
             </div>
-            <button class="scroll-btn right">⟩</button>
+            <button class="scroll-btn right"><span class="material-symbols-outlined">chevron_right</span></button>
         </div>
     </div>
 </div>
 
 <div class="image-slider">
     <div class="slider-controls">
-        <button class="prev-btn">❮</button>
-        <button class="next-btn">❯</button>
+        <button class="prev-btn"><span class="material-symbols-outlined">chevron_left</span></button>
+        <button class="next-btn"><span class="material-symbols-outlined">chevron_right</span></button>
     </div>
     <div class="slider-container">
         <img src="image/The-Berkeley-Hotel.jpg" alt="Room 1" class="slider-image active">

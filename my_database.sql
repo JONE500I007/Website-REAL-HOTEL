@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: db2
--- Generation Time: Jul 13, 2026 at 06:46 PM
+-- Generation Time: Jul 14, 2026 at 05:36 PM
 -- Server version: 9.7.0
 -- PHP Version: 8.3.26
 
@@ -109,6 +109,32 @@ INSERT INTO `hotel_images` (`id`, `hotel_id`, `image_path`) VALUES
 -- --------------------------------------------------------
 
 --
+-- Table structure for table `reviews`
+--
+
+CREATE TABLE `reviews` (
+  `id` int NOT NULL,
+  `hotel_id` int NOT NULL,
+  `user_id` int NOT NULL,
+  `parent_id` int DEFAULT NULL,
+  `rating` tinyint DEFAULT NULL,
+  `comment` text NOT NULL,
+  `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp NULL DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+--
+-- Dumping data for table `reviews`
+--
+
+INSERT INTO `reviews` (`id`, `hotel_id`, `user_id`, `parent_id`, `rating`, `comment`, `created_at`, `updated_at`) VALUES
+(4, 1, 3, NULL, 5, 'This For Meme 55555555', '2026-07-14 17:34:22', '2026-07-14 17:34:27'),
+(6, 1, 5, 4, NULL, 'ไม่ฮาจริง', '2026-07-14 17:35:18', NULL),
+(7, 1, 3, 4, NULL, 'ทำำทไมวะ', '2026-07-14 17:35:33', NULL);
+
+-- --------------------------------------------------------
+
+--
 -- Table structure for table `room_images`
 --
 
@@ -186,7 +212,8 @@ INSERT INTO `users` (`id`, `full_name`, `email`, `phone_number`, `password`, `ro
 (2, 'rgjirg krgiirgjrgjigr', 'adaaaa@gmail.com', 'adaaaa@gmail.com', '$2y$10$X4w7oCuYn03JZRWPaCJaDuqDVNOpgDqh9l4aatn0uTfeo/aQdX0I6', 'user', 'profile_2_1782767972.jpg', NULL),
 (3, 'ONE OF THE TEST MEME DO NOT A TEST', 'ingkawat2023reals@gmail.com', '0993113131', NULL, 'user', 'profile_3_1783074554.jpg', '109208015442849269891'),
 (4, 'okok@gmail.com', 'okok@gmail.com', '0993434343', '$2y$10$c7w1PhdAlietUj89yZKgRef2SYotRgj2CpjTXpfyIFOE1.8/2v2ZK', 'user', 'default.jpg', NULL),
-(5, 'SANS', 'okko0990okko@gmail.com', '0921231231', NULL, 'owner', 'profile_5_6a553018b0ca8.jpg', '109647387825501843945');
+(5, 'SANS', 'okko0990okko@gmail.com', '0921231231', NULL, 'owner', 'profile_5_6a553018b0ca8.jpg', '109647387825501843945'),
+(12, 'inthistest@gmail.com', 'inthistest@gmail.com', '094596343', '$2y$10$zbIuf/laM4Hh.8Yk56omGu/K2c.H.7VK7zrkKCCbtHO5KidVT2NYa', 'admin', 'default.jpg', NULL);
 
 --
 -- Indexes for dumped tables
@@ -209,6 +236,15 @@ ALTER TABLE `hotels`
 --
 ALTER TABLE `hotel_images`
   ADD PRIMARY KEY (`id`);
+
+--
+-- Indexes for table `reviews`
+--
+ALTER TABLE `reviews`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `idx_reviews_hotel` (`hotel_id`),
+  ADD KEY `idx_reviews_parent` (`parent_id`),
+  ADD KEY `idx_reviews_user` (`user_id`);
 
 --
 -- Indexes for table `room_images`
@@ -238,19 +274,25 @@ ALTER TABLE `users`
 -- AUTO_INCREMENT for table `bookings`
 --
 ALTER TABLE `bookings`
-  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=16;
+  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=17;
 
 --
 -- AUTO_INCREMENT for table `hotels`
 --
 ALTER TABLE `hotels`
-  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=11;
+  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=12;
 
 --
 -- AUTO_INCREMENT for table `hotel_images`
 --
 ALTER TABLE `hotel_images`
   MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=24;
+
+--
+-- AUTO_INCREMENT for table `reviews`
+--
+ALTER TABLE `reviews`
+  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=8;
 
 --
 -- AUTO_INCREMENT for table `room_images`
@@ -262,13 +304,13 @@ ALTER TABLE `room_images`
 -- AUTO_INCREMENT for table `room_types`
 --
 ALTER TABLE `room_types`
-  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=12;
+  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=13;
 
 --
 -- AUTO_INCREMENT for table `users`
 --
 ALTER TABLE `users`
-  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=11;
+  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=15;
 
 --
 -- Constraints for dumped tables
