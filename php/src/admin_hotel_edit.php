@@ -56,7 +56,7 @@ $result = $conn->query("SELECT * FROM hotels ORDER BY id ASC");
 <?php require_once "includes/header.php"; ?>
 
 <div class="container">
-    <h2 class="booking-title">จัดการโรงแรม</h2>
+    <h2 class="booking-title"><span class="material-symbols-outlined">hotel</span> จัดการโรงแรม</h2>
 
     <?php if (!empty($msg)): ?>
         <div class="alert alert-success"><?= htmlspecialchars($msg) ?></div>
@@ -80,19 +80,24 @@ $result = $conn->query("SELECT * FROM hotels ORDER BY id ASC");
                 <?php while ($row = $result->fetch_assoc()): ?>
                 <tr>
                     <form method="post">
-                        <td><?= $row["id"] ?></td>
-                        <td><input type="text" name="hotel_name" value="<?= htmlspecialchars($row["hotel_name"]) ?>"></td>
-                        <td><input type="text" name="location" value="<?= htmlspecialchars($row["location"]) ?>"></td>
-                        <td><input type="text" name="price" value="<?= htmlspecialchars($row["price"]) ?>"></td>
-                        <td><input type="text" name="description" value="<?= htmlspecialchars($row["description"]) ?>"></td>
-                        <td><input type="text" name="facilities" value="<?= htmlspecialchars($row["facilities"]) ?>"></td>
-                        <td><input type="text" name="surrounding" value="<?= htmlspecialchars($row["surrounding"]) ?>"></td>
-                        <td>
+                        <td data-label="ID"><?= $row["id"] ?></td>
+                        <td data-label="ชื่อโรงแรม"><input type="text" name="hotel_name" value="<?= htmlspecialchars($row["hotel_name"]) ?>"></td>
+                        <td data-label="ที่ตั้ง"><input type="text" name="location" value="<?= htmlspecialchars($row["location"]) ?>"></td>
+                        <td data-label="ราคา"><input type="text" name="price" value="<?= htmlspecialchars($row["price"]) ?>"></td>
+                        <td data-label="รายละเอียด"><input type="text" name="description" value="<?= htmlspecialchars($row["description"]) ?>"></td>
+                        <td data-label="สิ่งอำนวยความสะดวก"><input type="text" name="facilities" value="<?= htmlspecialchars($row["facilities"]) ?>"></td>
+                        <td data-label="บริเวณโดยรอบ"><input type="text" name="surrounding" value="<?= htmlspecialchars($row["surrounding"]) ?>"></td>
+                        <td data-label="การจัดการ">
                             <input type="hidden" name="id" value="<?= $row["id"] ?>">
-                            <button type="submit" name="update_hotel">บันทึก</button>
-                            <br><br>
-                            <button type="submit" name="delete_hotel"
-                                    onclick="return confirm('คุณแน่ใจหรือไม่ว่าต้องการลบโรงแรมนี้?');">ลบ</button>
+                            <div class="admin-actions-cell">
+                                <button type="submit" name="update_hotel" class="btn-table-save">
+                                    <span class="material-symbols-outlined">save</span> บันทึก
+                                </button>
+                                <button type="submit" name="delete_hotel" class="btn-table-delete"
+                                        onclick="return confirm('คุณแน่ใจหรือไม่ว่าต้องการลบโรงแรมนี้?');">
+                                    <span class="material-symbols-outlined">delete</span> ลบ
+                                </button>
+                            </div>
                         </td>
                     </form>
                 </tr>
@@ -107,7 +112,5 @@ $result = $conn->query("SELECT * FROM hotels ORDER BY id ASC");
 </div>
 
 <?php require_once "includes/footer.php"; ?>
-
-<script src="assets/js/navbar.js"></script>
 </body>
 </html>

@@ -1605,7 +1605,7 @@ body {
 /* Styled Select Box */
 .styled-select {
     width: 100%;
-    padding: 12px 15px;
+    padding: 12px 34px 12px 15px;
     border: 2px solid #5d3f8c;
     border-radius: 8px;
     background-color: #fff;
@@ -1690,10 +1690,171 @@ body {
     box-sizing: border-box;
 }
 
+.booking-title {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+
+.booking-list input[type="text"],
+.booking-list input[type="email"],
+.booking-list input[type="date"],
+.booking-list input[type="number"],
+.booking-list select {
+    border: 1.5px solid #e5dcf5;
+    border-radius: 8px;
+    padding: 8px 10px;
+    font-family: inherit;
+    font-size: 13px;
+    color: #333;
+    transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+.booking-list input[type="text"]:focus,
+.booking-list input[type="email"]:focus,
+.booking-list input[type="date"]:focus,
+.booking-list input[type="number"]:focus,
+.booking-list select:focus {
+    outline: none;
+    border-color: #7b59a9;
+    box-shadow: 0 0 0 3px rgba(123,89,169,0.15);
+}
+
+/* .booking-list select above sets padding:8px 10px, which outranks
+   .styled-select's own padding (equal class-only specificity, but this
+   selector adds .booking-list so it wins) — restate the wider right
+   padding here so the custom dropdown arrow doesn't sit under the text. */
+.booking-list select.styled-select {
+    padding: 8px 34px 8px 10px;
+}
+
+.btn-table-save,
+.btn-table-delete,
+.btn-table-view {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    border: 1.5px solid transparent;
+    border-radius: 8px;
+    padding: 7px 14px;
+    font-size: 13px;
+    font-weight: 600;
+    font-family: inherit;
+    cursor: pointer;
+    transition: background 0.15s, border-color 0.15s;
+    white-space: nowrap;
+}
+
+.btn-table-save {
+    background: #7b59a9;
+    color: white;
+}
+
+.btn-table-save:hover { background: #5d3f8c; }
+
+.btn-table-delete {
+    background: #fbeaea;
+    color: #c62828;
+}
+
+.btn-table-delete:hover { background: #f6d5d5; }
+
+.btn-table-view {
+    background: #fff;
+    color: #7b59a9;
+    border-color: #d8c8ee;
+}
+
+.btn-table-view:hover { background: #f2edf9; }
+
+.btn-table-save .material-symbols-outlined,
+.btn-table-delete .material-symbols-outlined,
+.btn-table-view .material-symbols-outlined {
+    font-size: 16px;
+}
+
+.admin-actions-cell {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    min-width: 110px;
+}
+
+.admin-actions-cell .btn-table-save,
+.admin-actions-cell .btn-table-delete,
+.admin-actions-cell .btn-table-view {
+    width: 100%;
+}
+
 .table-scroll {
     width: 100%;
     overflow-x: auto;
     -webkit-overflow-scrolling: touch;
+}
+
+/* Admin data tables (.booking-list): collapse into stacked cards on phones.
+   Each <td> needs a data-label="..." attribute — its ::before shows the
+   column name above the field, since the <th> row is hidden below this
+   breakpoint. */
+@media (max-width: 760px) {
+    .booking-list,
+    .booking-list thead,
+    .booking-list tbody,
+    .booking-list tr,
+    .booking-list td {
+        display: block;
+        width: auto;
+    }
+
+    .booking-list {
+        width: 100%;
+        margin: 20px 0;
+    }
+
+    .booking-list thead {
+        display: none;
+    }
+
+    .booking-list tr {
+        background: #fff;
+        border: 1px solid #ede5f8;
+        border-radius: 12px;
+        box-shadow: 0 3px 12px rgba(93,63,140,0.08);
+        margin-bottom: 16px;
+        padding: 6px 16px;
+    }
+
+    .booking-list tr:hover {
+        background: #fff;
+    }
+
+    .booking-list td {
+        border-bottom: 1px solid #f3eefa;
+        padding: 10px 0;
+        text-align: left;
+    }
+
+    .booking-list td:last-child {
+        border-bottom: none;
+    }
+
+    .booking-list td[data-label]::before {
+        content: attr(data-label);
+        display: block;
+        font-size: 11px;
+        font-weight: 700;
+        color: #7b59a9;
+        text-transform: uppercase;
+        letter-spacing: 0.4px;
+        margin-bottom: 5px;
+    }
+
+    .booking-list input,
+    .booking-list select {
+        max-width: none;
+    }
 }
 
 /* ============================================================
@@ -3330,6 +3491,154 @@ body {
 
     .room-type-grid {
         grid-template-columns: 1fr;
+    }
+}
+
+/* ============================================================
+   ADMIN DASHBOARD
+   ============================================================ */
+.admin-dashboard {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 36px 20px 60px;
+}
+
+.admin-dashboard-header {
+    margin-bottom: 24px;
+}
+
+.admin-dashboard-header h1 {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 26px;
+    color: #2d1a50;
+    margin: 0 0 4px;
+}
+
+.admin-dashboard-header p {
+    color: #888;
+    margin: 0;
+}
+
+.admin-stats-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+    margin-bottom: 32px;
+}
+
+.admin-stat-card {
+    background: white;
+    border-radius: 14px;
+    box-shadow: 0 3px 16px rgba(93,63,140,0.09);
+    border: 1px solid #ede5f8;
+    padding: 18px 20px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+}
+
+.admin-stat-icon {
+    font-size: 28px;
+    color: #7b59a9;
+    background: #f2edf9;
+    border-radius: 12px;
+    padding: 10px;
+    flex-shrink: 0;
+}
+
+.admin-stat-value {
+    font-size: 24px;
+    font-weight: 700;
+    color: #2d1a50;
+    line-height: 1.2;
+}
+
+.admin-stat-label {
+    font-size: 13px;
+    color: #999;
+}
+
+.admin-stat-alert .admin-stat-icon {
+    color: #b8860b;
+    background: #fff3cd;
+}
+
+.admin-stat-alert .admin-stat-value {
+    color: #b8860b;
+}
+
+.admin-section-title {
+    font-size: 18px;
+    color: #2d1a50;
+    margin: 0 0 16px;
+}
+
+.admin-menu-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 18px;
+    margin-bottom: 30px;
+}
+
+.admin-menu-card {
+    background: white;
+    border-radius: 14px;
+    box-shadow: 0 3px 16px rgba(93,63,140,0.09);
+    border: 1px solid #ede5f8;
+    padding: 24px 22px;
+    text-decoration: none;
+    transition: box-shadow 0.2s, transform 0.15s;
+    display: block;
+}
+
+.admin-menu-card:hover {
+    box-shadow: 0 6px 24px rgba(93,63,140,0.18);
+    transform: translateY(-2px);
+}
+
+.admin-menu-icon {
+    font-size: 30px;
+    color: #7b59a9;
+    background: #f2edf9;
+    border-radius: 12px;
+    padding: 10px;
+    display: inline-flex;
+    margin-bottom: 14px;
+}
+
+.admin-menu-title {
+    font-size: 17px;
+    font-weight: 700;
+    color: #2d1a50;
+    margin-bottom: 6px;
+}
+
+.admin-menu-desc {
+    font-size: 13px;
+    color: #999;
+    margin: 0;
+    line-height: 1.5;
+}
+
+@media (max-width: 900px) {
+    .admin-stats-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .admin-menu-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 480px) {
+    .admin-stats-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .admin-dashboard {
+        padding: 20px 14px 40px;
     }
 }
 

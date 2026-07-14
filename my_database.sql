@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: db2
--- Generation Time: Jul 14, 2026 at 05:36 PM
+-- Generation Time: Jul 14, 2026 at 06:18 PM
 -- Server version: 9.7.0
 -- PHP Version: 8.3.26
 
@@ -128,9 +128,7 @@ CREATE TABLE `reviews` (
 --
 
 INSERT INTO `reviews` (`id`, `hotel_id`, `user_id`, `parent_id`, `rating`, `comment`, `created_at`, `updated_at`) VALUES
-(4, 1, 3, NULL, 5, 'This For Meme 55555555', '2026-07-14 17:34:22', '2026-07-14 17:34:27'),
-(6, 1, 5, 4, NULL, 'ไม่ฮาจริง', '2026-07-14 17:35:18', NULL),
-(7, 1, 3, 4, NULL, 'ทำำทไมวะ', '2026-07-14 17:35:33', NULL);
+(8, 1, 3, NULL, 5, 'เริ่มฮา จริงแล้วนะนาย :3', '2026-07-14 17:40:56', NULL);
 
 -- --------------------------------------------------------
 
@@ -292,7 +290,7 @@ ALTER TABLE `hotel_images`
 -- AUTO_INCREMENT for table `reviews`
 --
 ALTER TABLE `reviews`
-  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=8;
+  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=11;
 
 --
 -- AUTO_INCREMENT for table `room_images`
@@ -310,7 +308,7 @@ ALTER TABLE `room_types`
 -- AUTO_INCREMENT for table `users`
 --
 ALTER TABLE `users`
-  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=15;
+  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=18;
 
 --
 -- Constraints for dumped tables

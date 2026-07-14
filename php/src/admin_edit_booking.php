@@ -9,6 +9,11 @@ if (!isset($_SESSION["user_id"]) || $_SESSION["role"] !== "admin") {
 
 $msg = '';
 $validPaymentStatuses = ['pending_verification', 'confirmed', 'rejected'];
+$paymentStatusLabels  = [
+    'pending_verification' => 'รอตรวจสอบ',
+    'confirmed'             => 'ยืนยันแล้ว',
+    'rejected'              => 'ปฏิเสธแล้ว',
+];
 
 if ($_SERVER["REQUEST_METHOD"] === "POST") {
     if (isset($_POST["update_booking"])) {
@@ -63,7 +68,7 @@ $result = $conn->query("SELECT * FROM bookings ORDER BY id ASC");
 <?php require_once "includes/header.php"; ?>
 
 <div class="container">
-    <h2 class="booking-title">จัดการการจอง</h2>
+    <h2 class="booking-title"><span class="material-symbols-outlined">receipt_long</span> จัดการการจอง</h2>
 
     <?php if (!empty($msg)): ?>
         <div class="alert alert-success"><?= htmlspecialchars($msg) ?></div>
@@ -92,38 +97,45 @@ $result = $conn->query("SELECT * FROM bookings ORDER BY id ASC");
                 <?php while ($row = $result->fetch_assoc()): ?>
                 <tr>
                     <form method="post">
-                        <td><?= $row["id"] ?></td>
-                        <td><input type="text" name="first_name" value="<?= htmlspecialchars($row["first_name"]) ?>"></td>
-                        <td><input type="text" name="last_name" value="<?= htmlspecialchars($row["last_name"]) ?>"></td>
-                        <td><input type="email" name="email" value="<?= htmlspecialchars($row["email"]) ?>"></td>
-                        <td><input type="text" name="phone" value="<?= htmlspecialchars($row["phone"]) ?>"></td>
-                        <td><input type="date" name="checkin" value="<?= htmlspecialchars($row["checkin"]) ?>"></td>
-                        <td><input type="date" name="checkout" value="<?= htmlspecialchars($row["checkout"]) ?>"></td>
-                        <td><input type="number" name="guests" min="1" value="<?= htmlspecialchars($row["guests"]) ?>"></td>
-                        <td><input type="text" name="book_hotel_name" value="<?= htmlspecialchars($row["book_hotel_name"]) ?>"></td>
-                        <td>฿<?= number_format((float) $row["total_price"], 2) ?></td>
-                        <td>
+                        <td data-label="ID"><?= $row["id"] ?></td>
+                        <td data-label="ชื่อ"><input type="text" name="first_name" value="<?= htmlspecialchars($row["first_name"]) ?>"></td>
+                        <td data-label="นามสกุล"><input type="text" name="last_name" value="<?= htmlspecialchars($row["last_name"]) ?>"></td>
+                        <td data-label="อีเมล"><input type="email" name="email" value="<?= htmlspecialchars($row["email"]) ?>"></td>
+                        <td data-label="โทรศัพท์"><input type="text" name="phone" value="<?= htmlspecialchars($row["phone"]) ?>"></td>
+                        <td data-label="Check-in"><input type="date" name="checkin" value="<?= htmlspecialchars($row["checkin"]) ?>"></td>
+                        <td data-label="Check-out"><input type="date" name="checkout" value="<?= htmlspecialchars($row["checkout"]) ?>"></td>
+                        <td data-label="Guests"><input type="number" name="guests" min="1" value="<?= htmlspecialchars($row["guests"]) ?>"></td>
+                        <td data-label="โรงแรม"><input type="text" name="book_hotel_name" value="<?= htmlspecialchars($row["book_hotel_name"]) ?>"></td>
+                        <td data-label="ยอดชำระ">฿<?= number_format((float) $row["total_price"], 2) ?></td>
+                        <td data-label="สลิป">
                             <?php if (!empty($row["payment_slip"])): ?>
-                                <a href="uploads/slips/<?= urlencode($row["payment_slip"]) ?>" target="_blank" rel="noopener">ดูสลิป</a>
+                                <a href="uploads/slips/<?= urlencode($row["payment_slip"]) ?>" target="_blank" rel="noopener" class="btn-table-view" style="text-decoration:none;">
+                                    <span class="material-symbols-outlined">receipt</span> ดูสลิป
+                                </a>
                             <?php else: ?>
                                 -
                             <?php endif; ?>
                         </td>
-                        <td>
-                            <select name="payment_status">
+                        <td data-label="สถานะการชำระเงิน">
+                            <select name="payment_status" class="styled-select">
                                 <?php foreach ($validPaymentStatuses as $statusOption): ?>
                                     <option value="<?= $statusOption ?>" <?= $row["payment_status"] === $statusOption ? "selected" : "" ?>>
-                                        <?= $statusOption ?>
+                                        <?= $paymentStatusLabels[$statusOption] ?>
                                     </option>
                                 <?php endforeach; ?>
                             </select>
                         </td>
-                        <td>
+                        <td data-label="การจัดการ">
                             <input type="hidden" name="id" value="<?= $row["id"] ?>">
-                            <button type="submit" name="update_booking">บันทึก</button>
-                            <br><br>
-                            <button type="submit" name="delete_booking"
-                                    onclick="return confirm('คุณแน่ใจหรือไม่ว่าต้องการลบการจองนี้?');">ลบ</button>
+                            <div class="admin-actions-cell">
+                                <button type="submit" name="update_booking" class="btn-table-save">
+                                    <span class="material-symbols-outlined">save</span> บันทึก
+                                </button>
+                                <button type="submit" name="delete_booking" class="btn-table-delete"
+                                        onclick="return confirm('คุณแน่ใจหรือไม่ว่าต้องการลบการจองนี้?');">
+                                    <span class="material-symbols-outlined">delete</span> ลบ
+                                </button>
+                            </div>
                         </td>
                     </form>
                 </tr>

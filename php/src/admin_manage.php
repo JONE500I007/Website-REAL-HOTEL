@@ -6,6 +6,11 @@ if (!isset($_SESSION["user_id"]) || $_SESSION["role"] !== "admin") {
     header("Location: index.php");
     exit;
 }
+
+$userCount    = (int) $conn->query("SELECT COUNT(*) AS c FROM users")->fetch_assoc()["c"];
+$hotelCount   = (int) $conn->query("SELECT COUNT(*) AS c FROM hotels")->fetch_assoc()["c"];
+$bookingCount = (int) $conn->query("SELECT COUNT(*) AS c FROM bookings")->fetch_assoc()["c"];
+$pendingCount = (int) $conn->query("SELECT COUNT(*) AS c FROM bookings WHERE payment_status = 'pending_verification'")->fetch_assoc()["c"];
 ?>
 <!DOCTYPE html>
 <html lang="th">
@@ -22,18 +27,60 @@ if (!isset($_SESSION["user_id"]) || $_SESSION["role"] !== "admin") {
 
 <?php require_once "includes/header.php"; ?>
 
-<div class="container">
-    <h2 class="booking-title">เมนูจัดการระบบ (Admin)</h2>
+<div class="admin-dashboard">
+    <div class="admin-dashboard-header">
+        <h1><span class="material-symbols-outlined">shield_person</span> แผงควบคุมผู้ดูแลระบบ</h1>
+        <p>ภาพรวมและเมนูจัดการระบบทั้งหมด</p>
+    </div>
 
-    <div class="form-container" style="min-height:auto;">
-        <div class="form-card" style="max-width:600px;">
-            <h3>คุณต้องการจัดการอะไร?</h3>
-            <div style="display:flex; flex-direction:column; gap:15px; margin-top:20px;">
-                <a href="admin_edit_users.php" class="btn-details">จัดการผู้ใช้</a>
-                <a href="admin_hotel_edit.php" class="btn-details">จัดการโรงแรม</a>
-                <a href="admin_edit_booking.php" class="btn-details">จัดการการจองโรงแรม</a>
+    <div class="admin-stats-grid">
+        <div class="admin-stat-card">
+            <span class="material-symbols-outlined admin-stat-icon">group</span>
+            <div>
+                <div class="admin-stat-value"><?= number_format($userCount) ?></div>
+                <div class="admin-stat-label">ผู้ใช้ทั้งหมด</div>
             </div>
         </div>
+        <div class="admin-stat-card">
+            <span class="material-symbols-outlined admin-stat-icon">hotel</span>
+            <div>
+                <div class="admin-stat-value"><?= number_format($hotelCount) ?></div>
+                <div class="admin-stat-label">โรงแรมทั้งหมด</div>
+            </div>
+        </div>
+        <div class="admin-stat-card">
+            <span class="material-symbols-outlined admin-stat-icon">receipt_long</span>
+            <div>
+                <div class="admin-stat-value"><?= number_format($bookingCount) ?></div>
+                <div class="admin-stat-label">การจองทั้งหมด</div>
+            </div>
+        </div>
+        <div class="admin-stat-card<?= $pendingCount > 0 ? ' admin-stat-alert' : '' ?>">
+            <span class="material-symbols-outlined admin-stat-icon">hourglass_top</span>
+            <div>
+                <div class="admin-stat-value"><?= number_format($pendingCount) ?></div>
+                <div class="admin-stat-label">รอตรวจสอบการชำระเงิน</div>
+            </div>
+        </div>
+    </div>
+
+    <h2 class="admin-section-title">คุณต้องการจัดการอะไร?</h2>
+    <div class="admin-menu-grid">
+        <a href="admin_edit_users.php" class="admin-menu-card">
+            <span class="material-symbols-outlined admin-menu-icon">group</span>
+            <div class="admin-menu-title">จัดการผู้ใช้</div>
+            <p class="admin-menu-desc">แก้ไขข้อมูล เปลี่ยนสิทธิ์ และลบบัญชีผู้ใช้</p>
+        </a>
+        <a href="admin_hotel_edit.php" class="admin-menu-card">
+            <span class="material-symbols-outlined admin-menu-icon">hotel</span>
+            <div class="admin-menu-title">จัดการโรงแรม</div>
+            <p class="admin-menu-desc">แก้ไขข้อมูลโรงแรมและสิ่งอำนวยความสะดวก</p>
+        </a>
+        <a href="admin_edit_booking.php" class="admin-menu-card">
+            <span class="material-symbols-outlined admin-menu-icon">receipt_long</span>
+            <div class="admin-menu-title">จัดการการจองโรงแรม</div>
+            <p class="admin-menu-desc">ตรวจสอบการจองและสถานะการชำระเงิน</p>
+        </a>
     </div>
 
     <div class="booking-back">
@@ -42,7 +89,5 @@ if (!isset($_SESSION["user_id"]) || $_SESSION["role"] !== "admin") {
 </div>
 
 <?php require_once "includes/footer.php"; ?>
-
-<script src="assets/js/navbar.js"></script>
 </body>
 </html>

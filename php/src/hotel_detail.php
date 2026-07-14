@@ -51,6 +51,7 @@ unset($room);
 $hasPin = !empty($hotel["latitude"]) && !empty($hotel["longitude"]);
 
 $current_user_id = $_SESSION["user_id"] ?? null;
+$isAdmin = ($_SESSION["role"] ?? '') === 'admin';
 $reviewError = '';
 
 if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST["review_action"])) {
@@ -117,8 +118,13 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST["review_action"])) {
     if ($action === "delete_review") {
         $review_id = (int) ($_POST["review_id"] ?? 0);
 
-        $del = $conn->prepare("DELETE FROM reviews WHERE id = ? AND user_id = ?");
-        $del->bind_param("ii", $review_id, $current_user_id);
+        if ($isAdmin) {
+            $del = $conn->prepare("DELETE FROM reviews WHERE id = ?");
+            $del->bind_param("i", $review_id);
+        } else {
+            $del = $conn->prepare("DELETE FROM reviews WHERE id = ? AND user_id = ?");
+            $del->bind_param("ii", $review_id, $current_user_id);
+        }
         $del->execute();
         if ($del->affected_rows > 0) {
             // A deleted top-level review takes its replies with it. Replies never
@@ -392,12 +398,14 @@ if ($current_user_id) {
                                     <button type="button" class="review-link-btn" onclick="toggleEdit(<?= (int) $review['id'] ?>)">
                                         <span class="material-symbols-outlined">edit</span> แก้ไข
                                     </button>
+                                <?php endif; ?>
+                                <?php if ($isMine || $isAdmin): ?>
                                     <form method="post" style="display:inline">
                                         <input type="hidden" name="review_action" value="delete_review">
                                         <input type="hidden" name="review_id" value="<?= (int) $review['id'] ?>">
                                         <button type="submit" class="review-link-btn review-link-danger"
                                                 onclick="return confirm('ลบรีวิวนี้ใช่หรือไม่? คำตอบกลับทั้งหมดจะถูกลบไปด้วย');">
-                                            <span class="material-symbols-outlined">delete</span> ลบ
+                                            <span class="material-symbols-outlined">delete</span> ลบ<?= (!$isMine && $isAdmin) ? ' (Admin)' : '' ?>
                                         </button>
                                     </form>
                                 <?php endif; ?>
@@ -448,17 +456,19 @@ if ($current_user_id) {
                                             </div>
                                         </div>
                                         <p class="review-comment"><?= nl2br(htmlspecialchars($reply['comment'])) ?></p>
-                                        <?php if ($replyIsMine): ?>
+                                        <?php if ($replyIsMine || $isAdmin): ?>
                                         <div class="review-actions">
+                                            <?php if ($replyIsMine): ?>
                                             <button type="button" class="review-link-btn" onclick="toggleEdit(<?= (int) $reply['id'] ?>)">
                                                 <span class="material-symbols-outlined">edit</span> แก้ไข
                                             </button>
+                                            <?php endif; ?>
                                             <form method="post" style="display:inline">
                                                 <input type="hidden" name="review_action" value="delete_review">
                                                 <input type="hidden" name="review_id" value="<?= (int) $reply['id'] ?>">
                                                 <button type="submit" class="review-link-btn review-link-danger"
                                                         onclick="return confirm('ลบคำตอบกลับนี้ใช่หรือไม่?');">
-                                                    <span class="material-symbols-outlined">delete</span> ลบ
+                                                    <span class="material-symbols-outlined">delete</span> ลบ<?= (!$replyIsMine && $isAdmin) ? ' (Admin)' : '' ?>
                                                 </button>
                                             </form>
                                         </div>

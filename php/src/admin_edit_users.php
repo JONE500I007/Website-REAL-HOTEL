@@ -20,8 +20,9 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
 
         $stmt = $conn->prepare("UPDATE users SET full_name=?, email=?, phone_number=?, role=? WHERE id=?");
         $stmt->bind_param("ssssi", $full_name, $email, $phone, $role, $id);
-        $msg     = $stmt->execute() ? "อัปเดตข้อมูลผู้ใช้เรียบร้อยแล้ว" : "เกิดข้อผิดพลาด: " . $stmt->error;
-        $msgType = $stmt->execute() ? 'success' : 'danger';
+        $ok      = $stmt->execute();
+        $msg     = $ok ? "อัปเดตข้อมูลผู้ใช้เรียบร้อยแล้ว" : "เกิดข้อผิดพลาด: " . $stmt->error;
+        $msgType = $ok ? 'success' : 'danger';
         $stmt->close();
     }
 
@@ -53,7 +54,7 @@ $result = $conn->query("SELECT * FROM users ORDER BY id ASC");
 <?php require_once "includes/header.php"; ?>
 
 <div class="container">
-    <h2 class="booking-title">จัดการผู้ใช้</h2>
+    <h2 class="booking-title"><span class="material-symbols-outlined">group</span> จัดการผู้ใช้</h2>
 
     <?php if (!empty($msg)): ?>
         <div class="alert alert-<?= $msgType ?>"><?= htmlspecialchars($msg) ?></div>
@@ -74,22 +75,28 @@ $result = $conn->query("SELECT * FROM users ORDER BY id ASC");
             <?php while ($row = $result->fetch_assoc()): ?>
             <tr>
                 <form method="post">
-                    <td><?= $row["id"] ?></td>
-                    <td><input type="text" name="full_name" value="<?= htmlspecialchars($row["full_name"]) ?>"></td>
-                    <td><input type="email" name="email" value="<?= htmlspecialchars($row["email"]) ?>"></td>
-                    <td><input type="text" name="phone_number" value="<?= htmlspecialchars($row["phone_number"]) ?>"></td>
-                    <td>
+                    <td data-label="ID"><?= $row["id"] ?></td>
+                    <td data-label="ชื่อเต็ม"><input type="text" name="full_name" value="<?= htmlspecialchars($row["full_name"]) ?>"></td>
+                    <td data-label="อีเมล"><input type="email" name="email" value="<?= htmlspecialchars($row["email"]) ?>"></td>
+                    <td data-label="เบอร์โทร"><input type="text" name="phone_number" value="<?= htmlspecialchars($row["phone_number"]) ?>"></td>
+                    <td data-label="Role">
                         <select name="role" class="styled-select">
                             <option value="user"  <?= $row["role"] === "user"  ? "selected" : "" ?>>User</option>
                             <option value="owner" <?= $row["role"] === "owner" ? "selected" : "" ?>>Owner</option>
                             <option value="admin" <?= $row["role"] === "admin" ? "selected" : "" ?>>Admin</option>
                         </select>
                     </td>
-                    <td>
+                    <td data-label="การจัดการ">
                         <input type="hidden" name="id" value="<?= $row["id"] ?>">
-                        <button type="submit" name="update_user">บันทึก</button>
-                        <button type="submit" name="delete_user"
-                                onclick="return confirm('คุณแน่ใจหรือไม่ว่าต้องการลบผู้ใช้นี้?');">ลบ</button>
+                        <div class="admin-actions-cell">
+                            <button type="submit" name="update_user" class="btn-table-save">
+                                <span class="material-symbols-outlined">save</span> บันทึก
+                            </button>
+                            <button type="submit" name="delete_user" class="btn-table-delete"
+                                    onclick="return confirm('คุณแน่ใจหรือไม่ว่าต้องการลบผู้ใช้นี้?');">
+                                <span class="material-symbols-outlined">delete</span> ลบ
+                            </button>
+                        </div>
                     </td>
                 </form>
             </tr>
@@ -103,7 +110,5 @@ $result = $conn->query("SELECT * FROM users ORDER BY id ASC");
 </div>
 
 <?php require_once "includes/footer.php"; ?>
-
-<script src="assets/js/navbar.js"></script>
 </body>
 </html>
