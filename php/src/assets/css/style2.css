@@ -12,9 +12,11 @@ body {
 
 
 .container {
+    width: 100%;
     max-width: 1200px;
     margin: 0 auto;
     padding: 0 20px;
+    box-sizing: border-box;
 }
 
 /* Material Symbols icons — replaces emoji glyphs across the site.
@@ -412,9 +414,11 @@ body {
 /* Image Slider Section */
 .image-slider {
     position: relative;
+    width: 100%;
     max-width: 1200px;
     margin: 50px auto;
     overflow: hidden;
+    box-sizing: border-box;
 }
 
 .slider-container {
@@ -639,6 +643,23 @@ body {
     font-weight: 600;
     color: #4a3570;
     letter-spacing: 0.3px;
+}
+
+.field-label-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.field-inline-link {
+    font-size: 12px;
+    font-weight: 600;
+    color: #7b59a9;
+    text-decoration: none;
+}
+
+.field-inline-link:hover {
+    text-decoration: underline;
 }
 
 .field-wrap {
@@ -2311,6 +2332,47 @@ body {
     text-transform: capitalize;
 }
 
+.verify-badge {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    border-radius: 10px;
+    padding: 10px 14px;
+    font-size: 13px;
+    margin-bottom: 16px;
+}
+
+.verify-badge-ok {
+    background: #e8f6ee;
+    color: #1f6b34;
+}
+
+.verify-badge-warn {
+    background: #fff3cd;
+    color: #8a6d1a;
+}
+
+.verify-badge-warn span:nth-child(2) {
+    flex: 1;
+}
+
+.verify-send-btn {
+    background: none;
+    border: 1.5px solid currentColor;
+    color: inherit;
+    border-radius: 6px;
+    padding: 4px 12px;
+    font-size: 12px;
+    font-weight: 600;
+    font-family: inherit;
+    cursor: pointer;
+    white-space: nowrap;
+}
+
+.verify-send-btn:hover {
+    background: rgba(0,0,0,0.05);
+}
+
 /* Form card */
 .profile-form-card {
     flex: 1;
@@ -2618,9 +2680,11 @@ body {
    BOARD PAGE (booking list)
    ============================================================ */
 .board-page {
+    width: 100%;
     max-width: 900px;
     margin: 0 auto;
     padding: 36px 20px 60px;
+    box-sizing: border-box;
 }
 
 .board-header {
@@ -3498,9 +3562,11 @@ body {
    ADMIN DASHBOARD
    ============================================================ */
 .admin-dashboard {
+    width: 100%;
     max-width: 1100px;
     margin: 0 auto;
     padding: 36px 20px 60px;
+    box-sizing: border-box;
 }
 
 .admin-dashboard-header {

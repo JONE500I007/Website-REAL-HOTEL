@@ -102,3 +102,45 @@ function save_payment_slip(array $file, string $destDir): string|false {
 
     return $filename;
 }
+
+// Returns [rawToken, hashedToken]. The raw token goes out in the emailed
+// link; only the hash is stored, so a DB leak alone can't be used to reset
+// an account (same idea as never storing plaintext passwords).
+function generate_secure_token(): array {
+    $raw = bin2hex(random_bytes(32));
+    return [$raw, hash('sha256', $raw)];
+}
+
+// Sends an email through the Resend HTTP API (https://resend.com/docs/api-reference/emails/send-email).
+// Requires config/resend.php to have been loaded first. Returns false on any
+// transport or API error instead of throwing, since a failed notification
+// email shouldn't break the page that triggered it.
+function send_email_via_resend(string $toEmail, string $subject, string $html): bool {
+    if (!RESEND_API_KEY) {
+        return false;
+    }
+
+    $payload = json_encode([
+        'from'    => MAIL_FROM_NAME . ' <' . MAIL_FROM_ADDRESS . '>',
+        'to'      => [$toEmail],
+        'subject' => $subject,
+        'html'    => $html,
+    ]);
+
+    $ch = curl_init('https://api.resend.com/emails');
+    curl_setopt_array($ch, [
+        CURLOPT_POST           => true,
+        CURLOPT_POSTFIELDS     => $payload,
+        CURLOPT_HTTPHEADER     => [
+            'Authorization: Bearer ' . RESEND_API_KEY,
+            'Content-Type: application/json',
+        ],
+        CURLOPT_RETURNTRANSFER => true,
+        CURLOPT_TIMEOUT        => 10,
+    ]);
+    $response = curl_exec($ch);
+    $status   = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+    curl_close($ch);
+
+    return $response !== false && $status >= 200 && $status < 300;
+}

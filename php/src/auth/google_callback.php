@@ -47,6 +47,12 @@ if ($result->num_rows > 0) {
     $user = ['id' => $conn->insert_id, 'full_name' => $name, 'email' => $email, 'role' => 'user', 'profile_picture' => $avatar];
 }
 
+// Google already verifies the account's email, so mark it verified here too.
+$verifyStmt = $conn->prepare("UPDATE users SET email_verified_at = NOW() WHERE id = ? AND email_verified_at IS NULL");
+$verifyStmt->bind_param("i", $user['id']);
+$verifyStmt->execute();
+$verifyStmt->close();
+
 // สร้าง Session
 $_SESSION['user']            = $user['full_name'];
 $_SESSION['user_id']         = $user['id'];

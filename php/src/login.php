@@ -84,7 +84,10 @@ if (isset($_POST["login"])) {
                     </div>
                 </div>
                 <div class="field-group">
-                    <label>รหัสผ่าน</label>
+                    <div class="field-label-row">
+                        <label>รหัสผ่าน</label>
+                        <a href="forgot_password.php" class="field-inline-link">ลืมรหัสผ่าน?</a>
+                    </div>
                     <div class="field-wrap password-wrapper">
                         <span class="field-icon material-symbols-outlined">lock</span>
                         <input type="password" name="password" id="password" placeholder="รหัสผ่านของคุณ" required>

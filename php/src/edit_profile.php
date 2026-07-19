@@ -7,6 +7,7 @@ if (!isset($_SESSION["user_id"])) {
 }
 
 require_once "config/database.php";
+require_once "config/resend.php";
 require_once "includes/functions.php";
 
 $user_id = $_SESSION["user_id"];
@@ -19,6 +20,29 @@ $stmt->close();
 
 $errors  = [];
 $success = false;
+$verificationMsg = '';
+
+if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST["send_verification"])) {
+    if ($user["password"] !== null && !$user["email_verified_at"]) {
+        [$rawToken, $hashedToken] = generate_secure_token();
+
+        $upd = $conn->prepare("UPDATE users SET verify_token = ?, verify_token_expires_at = DATE_ADD(NOW(), INTERVAL 24 HOUR) WHERE id = ?");
+        $upd->bind_param("si", $hashedToken, $user_id);
+        $upd->execute();
+        $upd->close();
+
+        $verifyLink = APP_URL . "/verify_email.php?token=" . urlencode($rawToken);
+        $html = "
+            <p>สวัสดีคุณ " . htmlspecialchars($user['full_name']) . "</p>
+            <p>กรุณายืนยันอีเมลของคุณสำหรับบัญชี JustHottel โดยคลิกลิงก์ด้านล่าง (ลิงก์นี้ใช้ได้ 24 ชั่วโมง):</p>
+            <p><a href=\"{$verifyLink}\" style=\"background:#7b59a9;color:#fff;padding:12px 24px;border-radius:8px;text-decoration:none;display:inline-block;\">ยืนยันอีเมล</a></p>
+        ";
+        $emailSent = send_email_via_resend($user["email"], "ยืนยันอีเมลของคุณ - JustHottel", $html);
+        $verificationMsg = $emailSent
+            ? "ส่งอีเมลยืนยันไปที่ " . htmlspecialchars($user["email"]) . " แล้ว กรุณาตรวจสอบกล่องจดหมาย"
+            : "เกิดข้อผิดพลาดในการส่งอีเมล กรุณาลองใหม่อีกครั้ง";
+    }
+}
 
 function formatPhone(?string $raw): string {
     $raw = $raw ?? '';
@@ -28,7 +52,7 @@ function formatPhone(?string $raw): string {
     return $raw;
 }
 
-if ($_SERVER["REQUEST_METHOD"] === "POST") {
+if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST["full_name"])) {
     $full_name    = trim($_POST["full_name"] ?? '');
     $email        = trim($_POST["email"] ?? '');
     $phone_number = trim($_POST["phone_number"] ?? '');
@@ -63,13 +87,16 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
     }
 
     if (empty($errors)) {
+        // If the email actually changed, the old verification no longer
+        // applies to it — IF() reads the row's pre-update `email` column, so
+        // this only clears verification when the value is really changing.
         if (!empty($new_password)) {
             $hashed = password_hash($new_password, PASSWORD_DEFAULT);
-            $stmt = $conn->prepare("UPDATE users SET full_name=?, email=?, phone_number=?, password=?, profile_picture=? WHERE id=?");
-            $stmt->bind_param("sssssi", $full_name, $email, $phone_number, $hashed, $profile_image, $user_id);
+            $stmt = $conn->prepare("UPDATE users SET full_name=?, email=?, phone_number=?, password=?, profile_picture=?, email_verified_at = IF(email <> ?, NULL, email_verified_at) WHERE id=?");
+            $stmt->bind_param("ssssssi", $full_name, $email, $phone_number, $hashed, $profile_image, $email, $user_id);
         } else {
-            $stmt = $conn->prepare("UPDATE users SET full_name=?, email=?, phone_number=?, profile_picture=? WHERE id=?");
-            $stmt->bind_param("ssssi", $full_name, $email, $phone_number, $profile_image, $user_id);
+            $stmt = $conn->prepare("UPDATE users SET full_name=?, email=?, phone_number=?, profile_picture=?, email_verified_at = IF(email <> ?, NULL, email_verified_at) WHERE id=?");
+            $stmt->bind_param("sssssi", $full_name, $email, $phone_number, $profile_image, $email, $user_id);
         }
 
         if ($stmt->execute()) {
@@ -78,6 +105,9 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
             $_SESSION["profile_picture"] = $profile_image;
             $success = true;
             $user["full_name"]       = $full_name;
+            if ($email !== $user["email"]) {
+                $user["email_verified_at"] = null;
+            }
             $user["email"]           = $email;
             $user["phone_number"]    = $phone_number;
             $user["profile_picture"] = $profile_image;
@@ -135,6 +165,25 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
             <?php endforeach; ?>
             <?php if ($success): ?>
                 <div class="alert alert-success"><span class="material-symbols-outlined">check_circle</span> อัปเดตข้อมูลเรียบร้อยแล้ว!</div>
+            <?php endif; ?>
+            <?php if (!empty($verificationMsg)): ?>
+                <div class="alert alert-success"><span class="material-symbols-outlined">mail</span> <?= htmlspecialchars($verificationMsg) ?></div>
+            <?php endif; ?>
+
+            <?php if ($user["password"] !== null): ?>
+                <?php if ($user["email_verified_at"]): ?>
+                    <div class="verify-badge verify-badge-ok">
+                        <span class="material-symbols-outlined">verified</span> อีเมลยืนยันแล้ว
+                    </div>
+                <?php else: ?>
+                    <div class="verify-badge verify-badge-warn">
+                        <span class="material-symbols-outlined">error</span>
+                        <span>อีเมลยังไม่ได้ยืนยัน</span>
+                        <form method="post">
+                            <button type="submit" name="send_verification" class="verify-send-btn">ส่งอีเมลยืนยัน</button>
+                        </form>
+                    </div>
+                <?php endif; ?>
             <?php endif; ?>
 
             <form action="edit_profile.php" method="post" enctype="multipart/form-data" class="auth-form">
