@@ -48,6 +48,8 @@ foreach ($roomTypes as &$room) {
 }
 unset($room);
 
+$hotelAmenities = get_amenities_for_hotels($conn, [$hotel_id])[$hotel_id] ?? [];
+
 $hasPin = !empty($hotel["latitude"]) && !empty($hotel["longitude"]);
 
 $current_user_id = $_SESSION["user_id"] ?? null;
@@ -245,6 +247,17 @@ if ($current_user_id) {
         <div class="hotel-address">
             <p><?= htmlspecialchars($hotel["location"]) ?></p>
         </div>
+
+        <?php if (!empty($hotelAmenities)): ?>
+            <div class="hotel-detail-tags">
+                <?php foreach ($hotelAmenities as $amenity): ?>
+                    <span class="hotel-card-tag">
+                        <span class="material-symbols-outlined"><?= htmlspecialchars($amenity['icon']) ?></span>
+                        <?= htmlspecialchars($amenity['title']) ?>
+                    </span>
+                <?php endforeach; ?>
+            </div>
+        <?php endif; ?>
 
         <div class="hotel-gallery" data-images='<?= htmlspecialchars(json_encode($galleryImages), ENT_QUOTES) ?>'>
             <div class="main-image room-thumb-clickable" data-index="0" onclick="openImageGallery(this)">

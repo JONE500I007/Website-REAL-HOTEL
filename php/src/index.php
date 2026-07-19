@@ -1,18 +1,9 @@
 <?php
 session_start();
 require_once "config/database.php";
+require_once "includes/functions.php";
 
-$sql = "
-    SELECT hotels.*, hotel_images.image_path
-    FROM hotels
-    LEFT JOIN (
-        SELECT MIN(id) as id, hotel_id
-        FROM hotel_images
-        GROUP BY hotel_id
-    ) AS first_images ON first_images.hotel_id = hotels.id
-    LEFT JOIN hotel_images ON hotel_images.id = first_images.id
-";
-$result = $conn->query($sql);
+$categories = $conn->query("SELECT * FROM hotel_categories WHERE show_on IN ('both', 'index') ORDER BY display_order ASC")->fetch_all(MYSQLI_ASSOC);
 ?>
 <!DOCTYPE html>
 <html lang="th">
@@ -126,29 +117,9 @@ document.addEventListener("DOMContentLoaded", function () {
     </div>
 </div>
 
-<div class="popular-hotels">
-    <div class="container">
-        <h2 class="section-title">โรงแรมยอดนิยมในอำเภอเมือง ปัตตานี</h2>
-        <div class="hotel-list-wrapper">
-            <button class="scroll-btn left"><span class="material-symbols-outlined">chevron_left</span></button>
-            <div class="hotel-list">
-                <?php while ($row = $result->fetch_assoc()): ?>
-                    <div class="hotel-card">
-                        <img src="<?= !empty($row["image_path"]) ? htmlspecialchars($row["image_path"]) : "uploads/hotels/noimage.jpg" ?>"
-                             alt="Hotel Image">
-                        <div class="card-content">
-                            <h3><?= htmlspecialchars($row["hotel_name"]) ?></h3>
-                            <p><?= htmlspecialchars($row["location"]) ?></p>
-                            <p><?= htmlspecialchars($row["description"]) ?></p>
-                            <a href="hotel_detail.php?id=<?= $row["id"] ?>" class="btn-details">ดูรายละเอียด</a>
-                        </div>
-                    </div>
-                <?php endwhile; ?>
-            </div>
-            <button class="scroll-btn right"><span class="material-symbols-outlined">chevron_right</span></button>
-        </div>
-    </div>
-</div>
+<?php foreach ($categories as $category): ?>
+    <?php render_hotel_category($conn, (int) $category['id'], $category['title']); ?>
+<?php endforeach; ?>
 
 <div class="image-slider">
     <div class="slider-controls">
@@ -166,11 +137,17 @@ document.addEventListener("DOMContentLoaded", function () {
 
 
 <script>
-document.querySelector(".scroll-btn.right").addEventListener("click", () => {
-    document.querySelector(".hotel-list").scrollBy({ left: 400, behavior: "smooth" });
+document.querySelectorAll(".scroll-btn.right").forEach(btn => {
+    btn.addEventListener("click", () => {
+        btn.closest(".hotel-list-wrapper").querySelector(".hotel-list")
+           .scrollBy({ left: 400, behavior: "smooth" });
+    });
 });
-document.querySelector(".scroll-btn.left").addEventListener("click", () => {
-    document.querySelector(".hotel-list").scrollBy({ left: -400, behavior: "smooth" });
+document.querySelectorAll(".scroll-btn.left").forEach(btn => {
+    btn.addEventListener("click", () => {
+        btn.closest(".hotel-list-wrapper").querySelector(".hotel-list")
+           .scrollBy({ left: -400, behavior: "smooth" });
+    });
 });
 </script>
 <script>

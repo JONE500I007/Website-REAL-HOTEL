@@ -81,6 +81,11 @@ $pendingCount = (int) $conn->query("SELECT COUNT(*) AS c FROM bookings WHERE pay
             <div class="admin-menu-title">จัดการการจองโรงแรม</div>
             <p class="admin-menu-desc">ตรวจสอบการจองและสถานะการชำระเงิน</p>
         </a>
+        <a href="admin_categories.php" class="admin-menu-card">
+            <span class="material-symbols-outlined admin-menu-icon">category</span>
+            <div class="admin-menu-title">จัดการหมวดหมู่โรงแรม</div>
+            <p class="admin-menu-desc">ตั้งชื่อหมวดและเลือกโรงแรมที่จะแสดงในแต่ละหมวด</p>
+        </a>
     </div>
 
     <div class="booking-back">

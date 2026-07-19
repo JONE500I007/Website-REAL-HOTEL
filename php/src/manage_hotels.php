@@ -26,6 +26,9 @@ $stmt->close();
 
 $hasHotel = !empty($hotel['id']);
 
+$allAmenities    = $conn->query("SELECT id, title, icon FROM amenities ORDER BY display_order ASC")->fetch_all(MYSQLI_ASSOC);
+$validAmenityIds = array_map('intval', array_column($allAmenities, 'id'));
+
 // ---- Delete hotel ----
 if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST["delete_hotel_id"])) {
     $delete_id = (int) $_POST["delete_hotel_id"];
@@ -76,6 +79,20 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST["hotel_name"])) {
 
         if ($stmt->execute()) {
             $hotel_id = $hasHotel ? $hotel["id"] : $conn->insert_id;
+
+            $selectedAmenityIds = array_values(array_intersect(array_map('intval', $_POST["amenities"] ?? []), $validAmenityIds));
+            $delAmenities = $conn->prepare("DELETE FROM hotel_amenities WHERE hotel_id = ?");
+            $delAmenities->bind_param("i", $hotel_id);
+            $delAmenities->execute();
+            $delAmenities->close();
+            if (!empty($selectedAmenityIds)) {
+                $insAmenity = $conn->prepare("INSERT INTO hotel_amenities (hotel_id, amenity_id) VALUES (?, ?)");
+                foreach ($selectedAmenityIds as $amenityId) {
+                    $insAmenity->bind_param("ii", $hotel_id, $amenityId);
+                    $insAmenity->execute();
+                }
+                $insAmenity->close();
+            }
 
             if (!empty($_POST["cropped_hotel_images_json"])) {
                 $croppedImages = json_decode($_POST["cropped_hotel_images_json"], true) ?: [];
@@ -253,6 +270,16 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST["delete_hotel_image_id
     exit;
 }
 
+// ---- Load this hotel's selected amenity tags ----
+$selectedAmenityIds = [];
+if ($hasHotel) {
+    $sa = $conn->prepare("SELECT amenity_id FROM hotel_amenities WHERE hotel_id = ?");
+    $sa->bind_param("i", $hotel["id"]);
+    $sa->execute();
+    $selectedAmenityIds = array_map('intval', array_column($sa->get_result()->fetch_all(MYSQLI_ASSOC), 'amenity_id'));
+    $sa->close();
+}
+
 // ---- Load existing hotel images for display ----
 $hotelImages = [];
 if ($hasHotel) {
@@ -387,6 +414,19 @@ if (isset($_GET["edit_room"])) {
                            value="<?= htmlspecialchars($hotel["facilities"]) ?>">
                 </div>
             </div>
+            <div class="field-group">
+                <label>สิ่งอำนวยความสะดวกเด่น (ใช้เป็นตัวกรองค้นหา)</label>
+                <div class="amenity-tab-list">
+                    <?php foreach ($allAmenities as $amenity): ?>
+                        <label class="amenity-tab">
+                            <input type="checkbox" name="amenities[]" value="<?= (int) $amenity['id'] ?>" <?= in_array((int) $amenity['id'], $selectedAmenityIds, true) ? 'checked' : '' ?>>
+                            <span class="material-symbols-outlined"><?= htmlspecialchars($amenity['icon']) ?></span>
+                            <?= htmlspecialchars($amenity['title']) ?>
+                        </label>
+                    <?php endforeach; ?>
+                </div>
+            </div>
+
             <div class="field-group">
                 <label>บริเวณโดยรอบ (คั่นด้วย ,)</label>
                 <div class="field-wrap">

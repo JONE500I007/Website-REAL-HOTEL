@@ -50,6 +50,108 @@ function save_cropped_image(string $dataUrl, string $destDir, string $prefix): s
     return $filename;
 }
 
+// Bulk-fetches amenity tags for a batch of hotels in one query (instead of
+// one query per hotel-card), keyed by hotel_id.
+function get_amenities_for_hotels(mysqli $conn, array $hotelIds): array {
+    $hotelIds = array_values(array_unique(array_filter(array_map('intval', $hotelIds))));
+    if (empty($hotelIds)) {
+        return [];
+    }
+
+    $placeholders = implode(',', array_fill(0, count($hotelIds), '?'));
+    $stmt = $conn->prepare("
+        SELECT ha.hotel_id, a.id, a.title, a.icon
+        FROM hotel_amenities ha
+        JOIN amenities a ON a.id = ha.amenity_id
+        WHERE ha.hotel_id IN ($placeholders)
+        ORDER BY a.display_order ASC
+    ");
+    $stmt->bind_param(str_repeat('i', count($hotelIds)), ...$hotelIds);
+    $stmt->execute();
+    $rows = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+    $stmt->close();
+
+    $byHotel = [];
+    foreach ($rows as $row) {
+        $byHotel[(int) $row['hotel_id']][] = ['id' => (int) $row['id'], 'title' => $row['title'], 'icon' => $row['icon']];
+    }
+    return $byHotel;
+}
+
+// Renders one hotel-card (used by render_hotel_category() and by hotel.php's
+// filtered results grid) so the markup — including amenity tag badges —
+// can't drift between the different places hotels are listed.
+function render_hotel_card(array $hotel, array $amenities = []): void {
+    ?>
+    <div class="hotel-card">
+        <img src="<?= !empty($hotel["image_path"]) ? htmlspecialchars($hotel["image_path"]) : "uploads/hotels/noimage.jpg" ?>"
+             alt="Hotel Image">
+        <div class="card-content">
+            <h3><?= htmlspecialchars($hotel["hotel_name"]) ?></h3>
+            <p><?= htmlspecialchars($hotel["location"]) ?></p>
+            <?php if (!empty($amenities)): ?>
+                <div class="hotel-card-tags">
+                    <?php foreach ($amenities as $amenity): ?>
+                        <span class="hotel-card-tag">
+                            <span class="material-symbols-outlined"><?= htmlspecialchars($amenity['icon']) ?></span>
+                            <?= htmlspecialchars($amenity['title']) ?>
+                        </span>
+                    <?php endforeach; ?>
+                </div>
+            <?php endif; ?>
+            <p><?= htmlspecialchars($hotel["description"]) ?></p>
+            <p>ราคา: <?= htmlspecialchars($hotel["price"]) ?> บาท</p>
+            <a href="hotel_detail.php?id=<?= (int) $hotel["id"] ?>" class="btn-details">ดูรายละเอียด</a>
+        </div>
+    </div>
+    <?php
+}
+
+// Renders one admin-curated hotel category section (used on both index.php
+// and hotel.php so the "which hotels show under which heading" logic and
+// markup can't drift between the two pages).
+function render_hotel_category(mysqli $conn, int $categoryId, string $title): void {
+    $stmt = $conn->prepare("
+        SELECT hotels.*, hotel_images.image_path
+        FROM hotel_category_items hci
+        JOIN hotels ON hotels.id = hci.hotel_id
+        LEFT JOIN (
+            SELECT MIN(id) as id, hotel_id
+            FROM hotel_images
+            GROUP BY hotel_id
+        ) AS first_images ON first_images.hotel_id = hotels.id
+        LEFT JOIN hotel_images ON hotel_images.id = first_images.id
+        WHERE hci.category_id = ?
+        ORDER BY hci.display_order ASC
+    ");
+    $stmt->bind_param("i", $categoryId);
+    $stmt->execute();
+    $hotels = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+    $stmt->close();
+
+    $amenitiesByHotel = get_amenities_for_hotels($conn, array_column($hotels, 'id'));
+    ?>
+    <div class="popular-hotels">
+        <div class="container">
+            <h2 class="section-title"><?= htmlspecialchars($title) ?></h2>
+            <?php if (!empty($hotels)): ?>
+                <div class="hotel-list-wrapper">
+                    <button class="scroll-btn left"><span class="material-symbols-outlined">chevron_left</span></button>
+                    <div class="hotel-list">
+                        <?php foreach ($hotels as $row): ?>
+                            <?php render_hotel_card($row, $amenitiesByHotel[(int) $row['id']] ?? []); ?>
+                        <?php endforeach; ?>
+                    </div>
+                    <button class="scroll-btn right"><span class="material-symbols-outlined">chevron_right</span></button>
+                </div>
+            <?php else: ?>
+                <p>ยังไม่มีโรงแรมในหมวดนี้</p>
+            <?php endif; ?>
+        </div>
+    </div>
+    <?php
+}
+
 function get_room_availability(mysqli $conn, int $room_type_id, string $checkin, string $checkout): int {
     $stmt = $conn->prepare("
         SELECT rt.quantity - COUNT(b.id) AS available
