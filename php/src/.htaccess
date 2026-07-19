@@ -1,0 +1,7 @@
+# Block direct HTTP access to dotfiles (.env, .git, etc.) — .env lives
+# inside the web root and holds every secret the app uses (DB password,
+# Google OAuth secret, Gmail/Resend credentials, PromptPay ID). Without
+# this, requesting /.env directly returns it as plain text.
+<FilesMatch "^\.">
+    Require all denied
+</FilesMatch>

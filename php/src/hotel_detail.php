@@ -526,7 +526,7 @@ if ($current_user_id) {
 
 <?php require_once "includes/footer.php"; ?>
 
-<script src="assets/js/navbar.js"></script>
+<script src="assets/js/navbar.js?v=<?= filemtime(__DIR__ . '/assets/js/navbar.js') ?>"></script>
 <script>
 var galleryImages = [];
 var galleryIndex = 0;

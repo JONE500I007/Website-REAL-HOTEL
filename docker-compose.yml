@@ -1,4 +1,3 @@
-version: '3.8'
 services:
   php-apache-environment:
     container_name: php-apache2
@@ -7,7 +6,16 @@ services:
       dockerfile: Dockerfile
     depends_on:
       - db2
-    image: php:8.2-apache
+    # This must NOT be named "php:8.2-apache" (or any other real upstream
+    # Docker Hub tag) — Compose tags the built image with whatever's here,
+    # which silently shadows the real upstream image of that name in the
+    # local cache. A future rebuild's "FROM php:8.2-apache" in the
+    # Dockerfile then resolves to this locally-shadowed (and possibly much
+    # older) image instead of actually pulling 8.2, without any warning.
+    # That's exactly what happened here: this was previously built from a
+    # Dockerfile pinned to PHP 8.0, tagged over "php:8.2-apache" by this
+    # same field, and every rebuild since kept layering on that stale base.
+    image: justhottel-php-apache
     volumes:
       - ./php/src:/var/www/html/
     ports:
@@ -17,18 +25,33 @@ services:
     image: mysql
     restart: unless-stopped
     environment:
-      MYSQL_ROOT_PASSWORD: mysql1122
-      MYSQL_DATABASE: my_database
-      MYSQL_USER: justthisuser
-      MYSQL_PASSWORD: mysqlpass1122
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${DB_NAME}
+      MYSQL_USER: ${DB_USER}
+      MYSQL_PASSWORD: ${DB_PASSWORD}
+    # Named volume for real data durability. The mysql image declares its
+    # own anonymous VOLUME for /var/lib/mysql, so data happens to survive a
+    # plain `docker compose up --build`, but that's incidental — an
+    # anonymous volume is easy to lose (`docker compose down -v`, a pruned
+    # host, `--renew-anon-volumes`) and impossible to back up by name.
+    volumes:
+      - db_data:/var/lib/mysql
     ports:
-      - "9906:3306"
+      # Loopback-only: don't expose raw MySQL to the internet on a public
+      # server. Use an SSH tunnel (ssh -L 9906:localhost:9906 user@server)
+      # for remote access instead.
+      - "127.0.0.1:9906:3306"
   phpmyadmin:
     image: phpmyadmin/phpmyadmin
     ports:
-      - "8000:80"
+      # Same reasoning as above — phpMyAdmin has no network-level auth of
+      # its own, so it shouldn't be reachable from the public internet.
+      - "127.0.0.1:8000:80"
     restart: unless-stopped
     environment:
       PMA_HOST: db2
     depends_on:
       - db2
+
+volumes:
+  db_data:

@@ -66,3 +66,44 @@ function renderPromptPayQR(containerEl, target, amount) {
     containerEl.innerHTML = qr.createSvgTag({ cellSize: 4, margin: 2 });
     return payload;
 }
+
+// Lets someone paying with only the one phone in hand (no second device to
+// scan the screen with) save the QR as a PNG instead, then open it from
+// their banking app's "scan from photo/gallery" option.
+function downloadPromptPayQR(containerEl, filename) {
+    var svgEl = containerEl.querySelector("svg");
+    if (!svgEl) return;
+
+    var svgData = new XMLSerializer().serializeToString(svgEl);
+    var svgBlob = new Blob([svgData], { type: "image/svg+xml;charset=utf-8" });
+    var svgUrl = URL.createObjectURL(svgBlob);
+
+    var img = new Image();
+    img.onload = function () {
+        // Render well above the on-screen SVG's native size so the saved
+        // image still scans cleanly when viewed full-screen or zoomed.
+        var size = 800;
+        var canvas = document.createElement("canvas");
+        canvas.width = size;
+        canvas.height = size;
+
+        var ctx = canvas.getContext("2d");
+        ctx.imageSmoothingEnabled = false; // keep QR module edges crisp, not blurred
+        ctx.fillStyle = "#ffffff";
+        ctx.fillRect(0, 0, size, size);
+        ctx.drawImage(img, 0, 0, size, size);
+        URL.revokeObjectURL(svgUrl);
+
+        canvas.toBlob(function (pngBlob) {
+            var pngUrl = URL.createObjectURL(pngBlob);
+            var link = document.createElement("a");
+            link.href = pngUrl;
+            link.download = filename || "promptpay-qr.png";
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(pngUrl);
+        }, "image/png");
+    };
+    img.src = svgUrl;
+}

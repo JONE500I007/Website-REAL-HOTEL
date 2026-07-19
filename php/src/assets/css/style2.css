@@ -2625,6 +2625,28 @@ body {
 
 .crop-btn-confirm:hover { opacity: 0.88; }
 
+.qr-download-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: #fff;
+    border: 1.5px solid #7b59a9;
+    color: #5d3f8c;
+    padding: 8px 16px;
+    border-radius: 8px;
+    font-family: 'Kanit', sans-serif;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.15s;
+}
+
+.qr-download-btn .material-symbols-outlined {
+    font-size: 16px;
+}
+
+.qr-download-btn:hover { background: #f2edf9; }
+
 @media (max-width: 768px) {
     .profile-page {
         padding: 0 0 48px;

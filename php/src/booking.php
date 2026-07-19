@@ -110,6 +110,7 @@ $last_name  = $name_parts[1] ?? "";
     <link rel="icon" type="image/png" href="image/hotel-icon-coupon-codes-hotel.png">
     <link rel="stylesheet" href="assets/css/style2.css?v=<?= filemtime(__DIR__ . '/assets/css/style2.css') ?>">
     <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@400;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" rel="stylesheet">
 </head>
 <body>
 
@@ -185,6 +186,12 @@ $last_name  = $name_parts[1] ?? "";
                             <p style="margin:0 0 10px; font-size:13px; color:#777;">
                                 PromptPay: <?= htmlspecialchars(PROMPTPAY_NAME) ?> (<?= htmlspecialchars(PROMPTPAY_ID) ?>)
                             </p>
+                            <button type="button" id="qrDownloadBtn" class="qr-download-btn">
+                                <span class="material-symbols-outlined">download</span> บันทึก QR Code เป็นรูปภาพ
+                            </button>
+                            <p style="margin:6px 0 0; font-size:12px; color:#999;">
+                                สำหรับกรณีไม่มีมือถือเครื่องอื่นสแกน — บันทึกรูปแล้วเปิดจากแอปธนาคารแทน
+                            </p>
                         </div>
                         <div style="padding:0 22px 16px;">
                             <label for="slipInput">แนบหลักฐานการโอนเงิน (สลิป) *</label>
@@ -210,8 +217,8 @@ $last_name  = $name_parts[1] ?? "";
 
 <?php require_once "includes/footer.php"; ?>
 
-<script src="assets/js/qrcode.js"></script>
-<script src="assets/js/promptpay.js"></script>
+<script src="assets/js/qrcode.js?v=<?= filemtime(__DIR__ . '/assets/js/qrcode.js') ?>"></script>
+<script src="assets/js/promptpay.js?v=<?= filemtime(__DIR__ . '/assets/js/promptpay.js') ?>"></script>
 <script>
 document.addEventListener("DOMContentLoaded", function () {
     // ---- Keep checkout strictly after checkin ----
@@ -270,6 +277,7 @@ document.addEventListener("DOMContentLoaded", function () {
     const slipInput        = document.getElementById("slipInput");
     const slipError        = document.getElementById("slipError");
     const qrContainer      = document.getElementById("promptpayQr");
+    const qrDownloadBtn    = document.getElementById("qrDownloadBtn");
     let paymentConfirmed   = false;
 
     function currentTotal() {
@@ -290,6 +298,10 @@ document.addEventListener("DOMContentLoaded", function () {
         slipInput.value = "";
         slipError.style.display = "none";
         paymentModal.style.display = "flex";
+    });
+
+    qrDownloadBtn.addEventListener("click", function () {
+        downloadPromptPayQR(qrContainer, "promptpay-qr-" + Math.round(currentTotal()) + ".png");
     });
 
     document.getElementById("paymentCancelBtn").addEventListener("click", () => paymentModal.style.display = "none");

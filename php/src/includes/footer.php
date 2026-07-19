@@ -14,4 +14,4 @@
     </div>
 </footer>
 
-<script src="assets/js/navbar.js"></script>
+<script src="assets/js/navbar.js?v=<?= filemtime(__DIR__ . '/../assets/js/navbar.js') ?>"></script>

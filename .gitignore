@@ -1,5 +1,10 @@
 # Secrets
+/.env
 php/src/.env
+
+# User-uploaded payment slips (bank transfer receipts) — sensitive
+# financial documents that shouldn't end up in version control.
+php/src/uploads/slips/
 
 # OS / editor junk
 .DS_Store

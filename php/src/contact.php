@@ -47,6 +47,6 @@ require_once "config/database.php";
 
 <?php require_once "includes/footer.php"; ?>
 
-<script src="assets/js/navbar.js"></script>
+<script src="assets/js/navbar.js?v=<?= filemtime(__DIR__ . '/assets/js/navbar.js') ?>"></script>
 </body>
 </html>
