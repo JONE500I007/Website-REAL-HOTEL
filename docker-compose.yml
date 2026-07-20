@@ -19,7 +19,7 @@ services:
     volumes:
       - ./php/src:/var/www/html/
     ports:
-      - 8080:80
+      - 80:80
   db2:
     container_name: db2
     image: mysql

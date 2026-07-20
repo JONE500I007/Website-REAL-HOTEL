@@ -118,7 +118,7 @@ document.addEventListener("DOMContentLoaded", function () {
 </div>
 
 <?php foreach ($categories as $category): ?>
-    <?php render_hotel_category($conn, (int) $category['id'], $category['title']); ?>
+    <?php render_hotel_category($conn, (int) $category['id'], $category['title'], (bool) $category['is_auto']); ?>
 <?php endforeach; ?>
 
 <div class="image-slider">

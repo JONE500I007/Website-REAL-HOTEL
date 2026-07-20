@@ -107,24 +107,41 @@ function render_hotel_card(array $hotel, array $amenities = []): void {
     <?php
 }
 
-// Renders one admin-curated hotel category section (used on both index.php
-// and hotel.php so the "which hotels show under which heading" logic and
-// markup can't drift between the two pages).
-function render_hotel_category(mysqli $conn, int $categoryId, string $title): void {
-    $stmt = $conn->prepare("
-        SELECT hotels.*, hotel_images.image_path
-        FROM hotel_category_items hci
-        JOIN hotels ON hotels.id = hci.hotel_id
-        LEFT JOIN (
-            SELECT MIN(id) as id, hotel_id
-            FROM hotel_images
-            GROUP BY hotel_id
-        ) AS first_images ON first_images.hotel_id = hotels.id
-        LEFT JOIN hotel_images ON hotel_images.id = first_images.id
-        WHERE hci.category_id = ?
-        ORDER BY hci.display_order ASC
-    ");
-    $stmt->bind_param("i", $categoryId);
+// Renders one hotel category section (used on both index.php and hotel.php
+// so the "which hotels show under which heading" logic and markup can't
+// drift between the two pages). Admin-curated categories list only the
+// hotels manually assigned via hotel_category_items; an "auto" category
+// (is_auto = 1) instead always lists every hotel, so owner-added hotels
+// show up without an admin having to assign them.
+function render_hotel_category(mysqli $conn, int $categoryId, string $title, bool $isAuto = false): void {
+    if ($isAuto) {
+        $stmt = $conn->prepare("
+            SELECT hotels.*, hotel_images.image_path
+            FROM hotels
+            LEFT JOIN (
+                SELECT MIN(id) as id, hotel_id
+                FROM hotel_images
+                GROUP BY hotel_id
+            ) AS first_images ON first_images.hotel_id = hotels.id
+            LEFT JOIN hotel_images ON hotel_images.id = first_images.id
+            ORDER BY hotels.id DESC
+        ");
+    } else {
+        $stmt = $conn->prepare("
+            SELECT hotels.*, hotel_images.image_path
+            FROM hotel_category_items hci
+            JOIN hotels ON hotels.id = hci.hotel_id
+            LEFT JOIN (
+                SELECT MIN(id) as id, hotel_id
+                FROM hotel_images
+                GROUP BY hotel_id
+            ) AS first_images ON first_images.hotel_id = hotels.id
+            LEFT JOIN hotel_images ON hotel_images.id = first_images.id
+            WHERE hci.category_id = ?
+            ORDER BY hci.display_order ASC
+        ");
+        $stmt->bind_param("i", $categoryId);
+    }
     $stmt->execute();
     $hotels = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
     $stmt->close();

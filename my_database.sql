@@ -135,6 +135,7 @@ CREATE TABLE `hotel_categories` (
   `title` varchar(255) NOT NULL,
   `display_order` int NOT NULL DEFAULT '0',
   `show_on` varchar(10) NOT NULL DEFAULT 'both',
+  `is_auto` tinyint(1) NOT NULL DEFAULT '0',
   `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
@@ -142,10 +143,11 @@ CREATE TABLE `hotel_categories` (
 -- Dumping data for table `hotel_categories`
 --
 
-INSERT INTO `hotel_categories` (`id`, `title`, `display_order`, `show_on`, `created_at`) VALUES
-(1, 'โรงแรมราคาประหยัด', 1, 'both', '2026-07-19 09:22:27'),
-(2, 'โรงแรมที่แนะนำ', 2, 'both', '2026-07-19 09:22:27'),
-(3, 'โรงแรมหรู', 3, 'both', '2026-07-19 09:22:27');
+INSERT INTO `hotel_categories` (`id`, `title`, `display_order`, `show_on`, `is_auto`, `created_at`) VALUES
+(1, 'โรงแรมราคาประหยัด', 1, 'both', 0, '2026-07-19 09:22:27'),
+(2, 'โรงแรมที่แนะนำ', 2, 'both', 0, '2026-07-19 09:22:27'),
+(3, 'โรงแรมหรู', 3, 'both', 0, '2026-07-19 09:22:27'),
+(4, 'โรงแรมทั้งหมด', 0, 'both', 1, '2026-07-21 00:00:00');
 
 -- --------------------------------------------------------
 

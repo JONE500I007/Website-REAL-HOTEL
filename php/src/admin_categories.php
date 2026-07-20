@@ -116,7 +116,12 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
     if ($action === "add_item") {
         $categoryId = (int) $_POST["category_id"];
         $hotelId    = (int) $_POST["hotel_id"];
-        if ($hotelId > 0) {
+        $isAutoCheck = $conn->prepare("SELECT is_auto FROM hotel_categories WHERE id = ?");
+        $isAutoCheck->bind_param("i", $categoryId);
+        $isAutoCheck->execute();
+        $isAutoRow = $isAutoCheck->get_result()->fetch_assoc();
+        $isAutoCheck->close();
+        if ($hotelId > 0 && empty($isAutoRow['is_auto'])) {
             $maxOrder = $conn->prepare("SELECT COALESCE(MAX(display_order), 0) AS m FROM hotel_category_items WHERE category_id = ?");
             $maxOrder->bind_param("i", $categoryId);
             $maxOrder->execute();
@@ -150,6 +155,22 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
 $categories = $conn->query("SELECT * FROM hotel_categories ORDER BY display_order ASC")->fetch_all(MYSQLI_ASSOC);
 
 foreach ($categories as &$category) {
+    if ($category['is_auto']) {
+        // Auto category: membership is every hotel, always — nothing to
+        // curate, so skip the manual items/available-hotels lookups.
+        $stmt = $conn->prepare("
+            SELECT h.id AS hotel_id, h.hotel_name,
+                   (SELECT image_path FROM hotel_images WHERE hotel_id = h.id ORDER BY id ASC LIMIT 1) AS image_path
+            FROM hotels h
+            ORDER BY h.id DESC
+        ");
+        $stmt->execute();
+        $category['items'] = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+        $stmt->close();
+        $category['availableHotels'] = [];
+        continue;
+    }
+
     $stmt = $conn->prepare("
         SELECT hci.id AS item_id, h.id AS hotel_id, h.hotel_name,
                (SELECT image_path FROM hotel_images WHERE hotel_id = h.id ORDER BY id ASC LIMIT 1) AS image_path
@@ -266,6 +287,10 @@ unset($category);
                 </div>
             </div>
 
+            <?php if ($category['is_auto']): ?>
+                <p class="category-empty-hint">หมวดนี้รวมโรงแรมทั้งหมดโดยอัตโนมัติ โรงแรมใหม่ที่ owner เพิ่มจะเข้ามาแสดงเองโดยไม่ต้องกดเพิ่ม</p>
+            <?php endif; ?>
+
             <?php if (empty($category['items'])): ?>
                 <p class="category-empty-hint">ยังไม่มีโรงแรมในหมวดนี้</p>
             <?php else: ?>
@@ -274,39 +299,41 @@ unset($category);
                         <div class="category-item-card">
                             <img src="<?= !empty($item['image_path']) ? htmlspecialchars($item['image_path']) : 'uploads/hotels/noimage.jpg' ?>" alt="">
                             <div class="category-item-name"><?= htmlspecialchars($item['hotel_name']) ?></div>
-                            <div class="category-item-actions">
-                                <form method="post" style="display:inline">
-                                    <input type="hidden" name="action" value="move_item">
-                                    <input type="hidden" name="id" value="<?= (int) $item['item_id'] ?>">
-                                    <input type="hidden" name="category_id" value="<?= (int) $category['id'] ?>">
-                                    <input type="hidden" name="direction" value="up">
-                                    <button type="submit" class="icon-btn-sm" <?= $itemIndex === 0 ? 'disabled' : '' ?>>
-                                        <span class="material-symbols-outlined">arrow_back</span>
-                                    </button>
-                                </form>
-                                <form method="post" style="display:inline">
-                                    <input type="hidden" name="action" value="move_item">
-                                    <input type="hidden" name="id" value="<?= (int) $item['item_id'] ?>">
-                                    <input type="hidden" name="category_id" value="<?= (int) $category['id'] ?>">
-                                    <input type="hidden" name="direction" value="down">
-                                    <button type="submit" class="icon-btn-sm" <?= $itemIndex === count($category['items']) - 1 ? 'disabled' : '' ?>>
-                                        <span class="material-symbols-outlined">arrow_forward</span>
-                                    </button>
-                                </form>
-                                <form method="post" style="display:inline">
-                                    <input type="hidden" name="action" value="remove_item">
-                                    <input type="hidden" name="id" value="<?= (int) $item['item_id'] ?>">
-                                    <button type="submit" class="icon-btn-sm icon-btn-danger">
-                                        <span class="material-symbols-outlined">close</span>
-                                    </button>
-                                </form>
-                            </div>
+                            <?php if (!$category['is_auto']): ?>
+                                <div class="category-item-actions">
+                                    <form method="post" style="display:inline">
+                                        <input type="hidden" name="action" value="move_item">
+                                        <input type="hidden" name="id" value="<?= (int) $item['item_id'] ?>">
+                                        <input type="hidden" name="category_id" value="<?= (int) $category['id'] ?>">
+                                        <input type="hidden" name="direction" value="up">
+                                        <button type="submit" class="icon-btn-sm" <?= $itemIndex === 0 ? 'disabled' : '' ?>>
+                                            <span class="material-symbols-outlined">arrow_back</span>
+                                        </button>
+                                    </form>
+                                    <form method="post" style="display:inline">
+                                        <input type="hidden" name="action" value="move_item">
+                                        <input type="hidden" name="id" value="<?= (int) $item['item_id'] ?>">
+                                        <input type="hidden" name="category_id" value="<?= (int) $category['id'] ?>">
+                                        <input type="hidden" name="direction" value="down">
+                                        <button type="submit" class="icon-btn-sm" <?= $itemIndex === count($category['items']) - 1 ? 'disabled' : '' ?>>
+                                            <span class="material-symbols-outlined">arrow_forward</span>
+                                        </button>
+                                    </form>
+                                    <form method="post" style="display:inline">
+                                        <input type="hidden" name="action" value="remove_item">
+                                        <input type="hidden" name="id" value="<?= (int) $item['item_id'] ?>">
+                                        <button type="submit" class="icon-btn-sm icon-btn-danger">
+                                            <span class="material-symbols-outlined">close</span>
+                                        </button>
+                                    </form>
+                                </div>
+                            <?php endif; ?>
                         </div>
                     <?php endforeach; ?>
                 </div>
             <?php endif; ?>
 
-            <?php if (!empty($category['availableHotels'])): ?>
+            <?php if (!$category['is_auto'] && !empty($category['availableHotels'])): ?>
                 <form method="post" class="category-add-item-form">
                     <input type="hidden" name="action" value="add_item">
                     <input type="hidden" name="category_id" value="<?= (int) $category['id'] ?>">
