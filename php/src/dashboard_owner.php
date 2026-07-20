@@ -37,6 +37,23 @@ if ($hotel && $_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST["id"], $_POS
     $stmt->close();
 }
 
+// "Clear" just hides a finished booking from the owner's active list
+// (owner_cleared = 1) — it doesn't delete the row, so booking history,
+// admin views, and availability checks elsewhere are unaffected.
+if ($hotel && $_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST["id"], $_POST["clear_action"])
+    && in_array($_POST["clear_action"], ['clear', 'restore'], true)) {
+    $id      = (int) $_POST["id"];
+    $cleared = $_POST["clear_action"] === 'clear' ? 1 : 0;
+
+    $stmt = $conn->prepare("UPDATE bookings SET owner_cleared = ? WHERE id = ? AND hotel_id = ?");
+    $stmt->bind_param("iii", $cleared, $id, $hotel["id"]);
+    $ok  = $stmt->execute();
+    $msg = $ok ? ($cleared ? "เคลียร์รายการเรียบร้อยแล้ว" : "นำรายการกลับมาแสดงแล้ว") : "เกิดข้อผิดพลาด: " . $stmt->error;
+    $stmt->close();
+}
+
+$viewCleared = isset($_GET["view"]) && $_GET["view"] === 'cleared';
+
 $bookings = [];
 $pendingCount = 0;
 if ($hotel) {
@@ -46,15 +63,16 @@ if ($hotel) {
                b.payment_slip, b.payment_status, rt.room_name
         FROM bookings b
         LEFT JOIN room_types rt ON rt.id = b.room_type_id
-        WHERE b.hotel_id = ?
+        WHERE b.hotel_id = ? AND b.owner_cleared = ?
         ORDER BY b.id DESC
     ");
-    $stmt->bind_param("i", $hotel["id"]);
+    $clearedFlag = $viewCleared ? 1 : 0;
+    $stmt->bind_param("ii", $hotel["id"], $clearedFlag);
     $stmt->execute();
     $result = $stmt->get_result();
     while ($row = $result->fetch_assoc()) {
         $bookings[] = $row;
-        if ($row["payment_status"] === "pending_verification") {
+        if (!$viewCleared && $row["payment_status"] === "pending_verification") {
             $pendingCount++;
         }
     }
@@ -91,7 +109,16 @@ $statusMeta = [
                 <span class="owner-pending-pill">รอตรวจสอบ <?= $pendingCount ?></span>
             <?php endif; ?>
         </div>
-        <a href="index.php" class="board-back-btn"><span class="material-symbols-outlined">home</span> หน้าหลัก</a>
+        <div style="display:flex; gap:10px; align-items:center;">
+            <?php if ($hotel): ?>
+                <?php if ($viewCleared): ?>
+                    <a href="dashboard_owner.php" class="board-back-btn"><span class="material-symbols-outlined">arrow_back</span> กลับไปรายการที่ใช้งานอยู่</a>
+                <?php else: ?>
+                    <a href="dashboard_owner.php?view=cleared" class="board-back-btn"><span class="material-symbols-outlined">archive</span> รายการที่เคลียร์แล้ว</a>
+                <?php endif; ?>
+            <?php endif; ?>
+            <a href="index.php" class="board-back-btn"><span class="material-symbols-outlined">home</span> หน้าหลัก</a>
+        </div>
     </div>
 
     <?php if (!empty($msg)): ?>
@@ -107,9 +134,9 @@ $statusMeta = [
         </div>
     <?php elseif (empty($bookings)): ?>
         <div class="board-empty">
-            <div class="board-empty-icon material-symbols-outlined">inbox</div>
-            <h3>ยังไม่มีการจอง</h3>
-            <p>เมื่อมีลูกค้าจองโรงแรมของคุณ รายการจะปรากฏที่นี่</p>
+            <div class="board-empty-icon material-symbols-outlined"><?= $viewCleared ? 'archive' : 'inbox' ?></div>
+            <h3><?= $viewCleared ? 'ยังไม่มีรายการที่เคลียร์' : 'ยังไม่มีการจอง' ?></h3>
+            <p><?= $viewCleared ? 'รายการที่คุณกดเคลียร์แล้วจะมาอยู่ที่นี่' : 'เมื่อมีลูกค้าจองโรงแรมของคุณ รายการจะปรากฏที่นี่' ?></p>
         </div>
     <?php else: ?>
         <div class="booking-cards">
@@ -189,6 +216,22 @@ $statusMeta = [
                                     <span class="material-symbols-outlined"><?= $meta['icon'] ?></span> <?= $meta['label'] ?>
                                 </button>
                             <?php endforeach; ?>
+                        </form>
+
+                        <form method="post" class="owner-status-actions">
+                            <input type="hidden" name="id" value="<?= (int) $row["id"] ?>">
+                            <?php if ($viewCleared): ?>
+                                <input type="hidden" name="clear_action" value="restore">
+                                <button type="submit" class="status-btn">
+                                    <span class="material-symbols-outlined">undo</span> นำกลับมาแสดง
+                                </button>
+                            <?php else: ?>
+                                <input type="hidden" name="clear_action" value="clear">
+                                <button type="submit" class="status-btn"
+                                        onclick="return confirm('เคลียร์รายการนี้ออกจากรายการที่ใช้งานอยู่ใช่หรือไม่? ยังดูย้อนหลังได้ที่ &quot;รายการที่เคลียร์แล้ว&quot;');">
+                                    <span class="material-symbols-outlined">done_all</span> เคลียร์
+                                </button>
+                            <?php endif; ?>
                         </form>
                     </div>
                 </div>
