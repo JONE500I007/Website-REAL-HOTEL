@@ -178,6 +178,7 @@ function get_room_availability(mysqli $conn, int $room_type_id, string $checkin,
          AND b.checkin < ?
          AND b.checkout > ?
          AND b.payment_status <> 'rejected'
+         AND b.owner_cleared = 0
         WHERE rt.id = ?
         GROUP BY rt.id, rt.quantity
     ");
