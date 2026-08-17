@@ -15,16 +15,43 @@ if (!in_array($_SESSION["role"], ["owner", "admin"])) {
 
 $owner_id = $_SESSION["user_id"];
 
-$stmt = $conn->prepare("SELECT * FROM hotels WHERE owner_id = ?");
+// An owner can run more than one property, so this page works on ONE hotel
+// at a time — picked by ?hotel_id= (or the hidden field a form posts back),
+// defaulting to their first. ?hotel_id=new opens a blank "add hotel" form.
+$stmt = $conn->prepare("SELECT * FROM hotels WHERE owner_id = ? ORDER BY id ASC");
 $stmt->bind_param("i", $owner_id);
 $stmt->execute();
-$hotel = $stmt->get_result()->fetch_assoc() ?: [
-    "hotel_name" => "", "location" => "", "latitude" => null, "longitude" => null,
-    "price" => "", "description" => "", "facilities" => "", "surrounding" => "", "type" => ""
-];
+$ownerHotels = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
 $stmt->close();
 
+$blankHotel = [
+    "hotel_name" => "", "location" => "", "province" => "", "latitude" => null, "longitude" => null,
+    "price" => "", "description" => "", "facilities" => "", "surrounding" => "", "type" => ""
+];
+
+$requestedHotelId = $_POST["hotel_id"] ?? $_GET["hotel_id"] ?? null;
+$addingNewHotel   = $requestedHotelId === 'new';
+
+$hotel = $blankHotel;
+if (!$addingNewHotel) {
+    $requestedHotelId = (int) $requestedHotelId;
+    foreach ($ownerHotels as $ownerHotel) {
+        // Falling back to the first hotel keeps a stale/foreign ?hotel_id=
+        // from silently editing someone else's property.
+        if ($requestedHotelId === 0 || (int) $ownerHotel['id'] === $requestedHotelId) {
+            $hotel = $ownerHotel;
+            break;
+        }
+    }
+    if (empty($hotel['id']) && !empty($ownerHotels)) {
+        $hotel = $ownerHotels[0];
+    }
+}
+
 $hasHotel = !empty($hotel['id']);
+// Every redirect and form on this page carries the active hotel, otherwise
+// saving a room would bounce the owner back to their first hotel.
+$hotelQuery = $hasHotel ? "?hotel_id=" . (int) $hotel['id'] : "";
 
 $allAmenities    = $conn->query("SELECT id, title, icon FROM amenities ORDER BY display_order ASC")->fetch_all(MYSQLI_ASSOC);
 $validAmenityIds = array_map('intval', array_column($allAmenities, 'id'));
@@ -60,6 +87,9 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST["delete_hotel_id"])) {
 if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST["hotel_name"])) {
     $hotel_name  = trim($_POST["hotel_name"] ?? '');
     $location    = trim($_POST["location"] ?? '');
+    // Only accept a province that's actually on the canonical list, so a
+    // tampered form can't write a value the filter dropdown can never match.
+    $province    = in_array($_POST["province"] ?? '', thai_provinces(), true) ? $_POST["province"] : '';
     $latitude    = ($_POST["latitude"] ?? '') !== '' ? (float) $_POST["latitude"] : null;
     $longitude   = ($_POST["longitude"] ?? '') !== '' ? (float) $_POST["longitude"] : null;
     $price       = trim($_POST["price"] ?? '');
@@ -70,11 +100,14 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST["hotel_name"])) {
 
     if (!empty($hotel_name) && !empty($location) && !empty($price)) {
         if ($hasHotel) {
-            $stmt = $conn->prepare("UPDATE hotels SET hotel_name=?, location=?, latitude=?, longitude=?, price=?, description=?, facilities=?, surrounding=?, type=? WHERE owner_id=?");
-            $stmt->bind_param("ssddsssssi", $hotel_name, $location, $latitude, $longitude, $price, $description, $facilities, $surrounding, $type, $owner_id);
+            // Scoped by id AND owner_id: id alone would let a tampered form
+            // edit another owner's hotel, owner_id alone would rewrite every
+            // hotel this owner has.
+            $stmt = $conn->prepare("UPDATE hotels SET hotel_name=?, location=?, province=?, latitude=?, longitude=?, price=?, description=?, facilities=?, surrounding=?, type=? WHERE id=? AND owner_id=?");
+            $stmt->bind_param("sssddsssssii", $hotel_name, $location, $province, $latitude, $longitude, $price, $description, $facilities, $surrounding, $type, $hotel["id"], $owner_id);
         } else {
-            $stmt = $conn->prepare("INSERT INTO hotels (hotel_name, location, latitude, longitude, price, description, facilities, surrounding, type, owner_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
-            $stmt->bind_param("ssddsssssi", $hotel_name, $location, $latitude, $longitude, $price, $description, $facilities, $surrounding, $type, $owner_id);
+            $stmt = $conn->prepare("INSERT INTO hotels (hotel_name, location, province, latitude, longitude, price, description, facilities, surrounding, type, owner_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+            $stmt->bind_param("sssddsssssi", $hotel_name, $location, $province, $latitude, $longitude, $price, $description, $facilities, $surrounding, $type, $owner_id);
         }
 
         if ($stmt->execute()) {
@@ -111,7 +144,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST["hotel_name"])) {
                 }
             }
 
-            header("Location: manage_hotels.php?success=1");
+            header("Location: manage_hotels.php?hotel_id=" . (int) $hotel_id . "&success=1");
             exit;
         } else {
             $saveError = "เกิดข้อผิดพลาด: " . $stmt->error;
@@ -172,7 +205,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST["room_name"]) && $hasH
             }
         }
 
-        header("Location: manage_hotels.php?room_success=1");
+        header("Location: manage_hotels.php{$hotelQuery}" . ($hotelQuery === '' ? '?' : '&') . "room_success=1");
         exit;
     } else {
         $roomError = "กรุณากรอกข้อมูลห้องพักให้ครบ (ชื่อห้อง, จำนวนผู้เข้าพัก, ราคา, จำนวนห้อง)";
@@ -209,7 +242,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST["delete_room_id"])) {
         $del->close();
     }
 
-    header("Location: manage_hotels.php");
+    header("Location: manage_hotels.php{$hotelQuery}");
     exit;
 }
 
@@ -241,7 +274,8 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST["delete_room_image_id"
         $del->close();
     }
 
-    header("Location: manage_hotels.php" . ($edit_room_after > 0 ? "?edit_room={$edit_room_after}" : ""));
+    header("Location: manage_hotels.php{$hotelQuery}"
+        . ($edit_room_after > 0 ? ($hotelQuery === '' ? '?' : '&') . "edit_room={$edit_room_after}" : ""));
     exit;
 }
 
@@ -266,7 +300,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST["delete_hotel_image_id
         $del->close();
     }
 
-    header("Location: manage_hotels.php");
+    header("Location: manage_hotels.php{$hotelQuery}");
     exit;
 }
 
@@ -342,6 +376,26 @@ if (isset($_GET["edit_room"])) {
     <div class="wide-form-card">
         <h2>โรงแรมของคุณ</h2>
 
+        <?php if (!empty($ownerHotels)): ?>
+            <div class="hotel-switcher">
+                <span class="hotel-switcher-label">
+                    <span class="material-symbols-outlined">apartment</span> โรงแรมที่คุณดูแล (<?= count($ownerHotels) ?>)
+                </span>
+                <div class="hotel-switcher-tabs">
+                    <?php foreach ($ownerHotels as $ownerHotel): ?>
+                        <a href="manage_hotels.php?hotel_id=<?= (int) $ownerHotel['id'] ?>"
+                           class="hotel-switcher-tab<?= (!$addingNewHotel && (int) $ownerHotel['id'] === (int) ($hotel['id'] ?? 0)) ? ' active' : '' ?>">
+                            <?= htmlspecialchars($ownerHotel['hotel_name']) ?>
+                        </a>
+                    <?php endforeach; ?>
+                    <a href="manage_hotels.php?hotel_id=new"
+                       class="hotel-switcher-tab hotel-switcher-add<?= $addingNewHotel ? ' active' : '' ?>">
+                        <span class="material-symbols-outlined">add</span> เพิ่มโรงแรมใหม่
+                    </a>
+                </div>
+            </div>
+        <?php endif; ?>
+
         <?php if (isset($_GET["success"])): ?>
             <div class="alert alert-success">บันทึกโรงแรมเรียบร้อยแล้ว</div>
         <?php endif; ?>
@@ -353,6 +407,7 @@ if (isset($_GET["edit_room"])) {
         <?php endif; ?>
 
         <form action="manage_hotels.php" method="post" enctype="multipart/form-data">
+            <input type="hidden" name="hotel_id" value="<?= $addingNewHotel ? 'new' : (int) ($hotel['id'] ?? 0) ?>">
             <div class="field-row">
                 <div class="field-group">
                     <label>ชื่อโรงแรม</label>
@@ -372,12 +427,34 @@ if (isset($_GET["edit_room"])) {
                 </div>
             </div>
 
-            <div class="field-group">
-                <label>ที่ตั้ง</label>
-                <div class="field-wrap">
-                    <span class="field-icon material-symbols-outlined">location_on</span>
-                    <input type="text" name="location" id="locationInput" placeholder="ที่ตั้ง"
-                           value="<?= htmlspecialchars($hotel["location"]) ?>">
+            <div class="field-row">
+                <div class="field-group">
+                    <label>ที่ตั้ง</label>
+                    <div class="field-wrap">
+                        <span class="field-icon material-symbols-outlined">location_on</span>
+                        <input type="text" name="location" id="locationInput" placeholder="ที่ตั้ง"
+                               value="<?= htmlspecialchars($hotel["location"]) ?>">
+                    </div>
+                </div>
+                <div class="field-group">
+                    <label>จังหวัด</label>
+                    <div class="field-wrap">
+                        <span class="field-icon material-symbols-outlined">map</span>
+                        <select name="province" class="styled-select">
+                            <option value="">-- เลือกจังหวัด --</option>
+                            <?php foreach (thai_provinces_by_region() as $region => $provinceNames): ?>
+                                <optgroup label="<?= htmlspecialchars($region) ?>">
+                                    <?php foreach ($provinceNames as $provinceName): ?>
+                                        <option value="<?= htmlspecialchars($provinceName) ?>"
+                                            <?= ($hotel["province"] ?? '') === $provinceName ? 'selected' : '' ?>>
+                                            <?= htmlspecialchars($provinceName) ?>
+                                        </option>
+                                    <?php endforeach; ?>
+                                </optgroup>
+                            <?php endforeach; ?>
+                        </select>
+                    </div>
+                    <span class="field-hint">ใช้สำหรับให้ผู้เข้าพักกรองหาโรงแรมตามจังหวัด</span>
                 </div>
             </div>
 
@@ -385,7 +462,7 @@ if (isset($_GET["edit_room"])) {
                 <div class="map-search-row">
                     <div class="field-wrap">
                         <span class="field-icon material-symbols-outlined">search</span>
-                        <input type="text" id="mapSearch" placeholder="พิมพ์ชื่อสถานที่หรือที่อยู่ เช่น มอ.ปัตตานี">
+                        <input type="text" id="mapSearch" placeholder="พิมพ์ชื่อสถานที่หรือที่อยู่ เช่น สยามพารากอน กรุงเทพ">
                     </div>
                 </div>
                 <span class="field-hint">
@@ -459,13 +536,14 @@ if (isset($_GET["edit_room"])) {
 
         <?php foreach ($hotelImages as $img): ?>
         <form method="post" id="delHotelImg<?= (int) $img['id'] ?>" data-confirm="ลบรูปนี้ใช่หรือไม่?">
+            <input type="hidden" name="hotel_id" value="<?= (int) ($hotel['id'] ?? 0) ?>">
             <input type="hidden" name="delete_hotel_image_id" value="<?= (int) $img['id'] ?>">
         </form>
         <?php endforeach; ?>
 
         <form method="POST" action="manage_hotels.php" data-confirm="คุณแน่ใจหรือไม่ว่าต้องการลบโรงแรมนี้?">
             <?php if ($hasHotel): ?>
-                <input type="hidden" name="delete_hotel_id" value="<?= htmlspecialchars($hotel['id']) ?>">
+                <input type="hidden" name="delete_hotel_id" value="<?= (int) $hotel['id'] ?>">
                 <button type="submit" class="btn btn-danger" style="margin-top:10px;">ลบโรงแรม</button>
             <?php endif; ?>
         </form>
@@ -493,8 +571,9 @@ if (isset($_GET["edit_room"])) {
                         <span>เหลือ <?= (int) $room['quantity'] ?> ห้อง</span>
                         <span class="room-price">฿<?= htmlspecialchars($room['price_per_night']) ?> / คืน</span>
                         <div class="room-actions">
-                            <a href="manage_hotels.php?edit_room=<?= (int) $room['id'] ?>" class="btn-edit-room">แก้ไข</a>
+                            <a href="manage_hotels.php?hotel_id=<?= (int) $hotel['id'] ?>&edit_room=<?= (int) $room['id'] ?>" class="btn-edit-room">แก้ไข</a>
                             <form method="post" style="flex:1;" data-confirm="ลบห้องพัก &quot;<?= htmlspecialchars($room['room_name'], ENT_QUOTES) ?>&quot; ใช่หรือไม่?">
+                                <input type="hidden" name="hotel_id" value="<?= (int) $hotel['id'] ?>">
                                 <input type="hidden" name="delete_room_id" value="<?= (int) $room['id'] ?>">
                                 <button type="submit" class="btn-delete-room">ลบ</button>
                             </form>
@@ -509,6 +588,7 @@ if (isset($_GET["edit_room"])) {
             <?= $editingRoom ? "แก้ไขห้องพัก: " . htmlspecialchars($editingRoom['room_name']) : "เพิ่มห้องพัก" ?>
         </h3>
         <form method="post" id="roomForm" class="<?= $editingRoom ? 'editing-room-form' : '' ?>">
+            <input type="hidden" name="hotel_id" value="<?= (int) $hotel['id'] ?>">
             <input type="hidden" name="room_type_id" value="<?= $editingRoom ? (int) $editingRoom['id'] : '' ?>">
 
             <div class="field-row">
@@ -591,12 +671,13 @@ if (isset($_GET["edit_room"])) {
 
             <button type="submit" class="auth-btn"><?= $editingRoom ? "บันทึกห้องพัก" : "เพิ่มห้องพัก" ?></button>
             <?php if ($editingRoom): ?>
-                <a href="manage_hotels.php" class="profile-back-link" style="display:block; margin-top:10px;">ยกเลิกการแก้ไข</a>
+                <a href="manage_hotels.php?hotel_id=<?= (int) $hotel['id'] ?>" class="profile-back-link" style="display:block; margin-top:10px;">ยกเลิกการแก้ไข</a>
             <?php endif; ?>
         </form>
 
         <?php if ($editingRoom): foreach ($editingRoom['images'] as $img): ?>
         <form method="post" id="delRoomImg<?= (int) $img['id'] ?>" data-confirm="ลบรูปนี้ใช่หรือไม่?">
+            <input type="hidden" name="hotel_id" value="<?= (int) $hotel['id'] ?>">
             <input type="hidden" name="delete_room_image_id" value="<?= (int) $img['id'] ?>">
             <input type="hidden" name="edit_room_after" value="<?= (int) $editingRoom['id'] ?>">
         </form>

@@ -26,9 +26,45 @@ function load_env(string $path): void {
     }
 }
 
+// Star average + review count for a hotel card, as SELECT columns to splice
+// into any query whose FROM already exposes `hotels`. Only rated top-level
+// rows count — `reviews` also holds unrated comments and replies, which carry
+// no score and must not dilute the average. A fixed literal, never user input.
+const HOTEL_RATING_COLUMNS = "
+    (SELECT AVG(rating) FROM reviews
+      WHERE hotel_id = hotels.id AND parent_id IS NULL AND rating IS NOT NULL) AS avg_rating,
+    (SELECT COUNT(*)    FROM reviews
+      WHERE hotel_id = hotels.id AND parent_id IS NULL AND rating IS NOT NULL) AS review_count
+";
+
 function resolve_upload_src(?string $path, string $subdir = ''): string {
     $path = $path ?: 'default.jpg';
     return str_starts_with($path, 'http') ? $path : "uploads/$subdir$path";
+}
+
+// The 77 Thai provinces, grouped by region. Shared by the owner's hotel form
+// (manage_hotels.php) and the province filter on hotel.php so the two can't
+// drift apart — a province typed on one side but missing on the other would
+// make that hotel unfilterable.
+function thai_provinces_by_region(): array {
+    return [
+        'กรุงเทพและปริมณฑล' => ['กรุงเทพมหานคร', 'นนทบุรี', 'ปทุมธานี', 'สมุทรปราการ', 'สมุทรสาคร', 'นครปฐม'],
+        'ภาคเหนือ' => ['เชียงใหม่', 'เชียงราย', 'ลำปาง', 'ลำพูน', 'แม่ฮ่องสอน', 'น่าน', 'พะเยา', 'แพร่', 'อุตรดิตถ์',
+                        'ตาก', 'สุโขทัย', 'พิษณุโลก', 'พิจิตร', 'เพชรบูรณ์', 'กำแพงเพชร', 'นครสวรรค์', 'อุทัยธานี'],
+        'ภาคตะวันออกเฉียงเหนือ' => ['นครราชสีมา', 'ขอนแก่น', 'อุดรธานี', 'อุบลราชธานี', 'หนองคาย', 'บึงกาฬ', 'เลย',
+                        'หนองบัวลำภู', 'สกลนคร', 'นครพนม', 'มุกดาหาร', 'กาฬสินธุ์', 'มหาสารคาม', 'ร้อยเอ็ด',
+                        'ยโสธร', 'อำนาจเจริญ', 'ศรีสะเกษ', 'สุรินทร์', 'บุรีรัมย์', 'ชัยภูมิ'],
+        'ภาคกลาง' => ['พระนครศรีอยุธยา', 'อ่างทอง', 'ลพบุรี', 'สิงห์บุรี', 'ชัยนาท', 'สระบุรี', 'สุพรรณบุรี'],
+        'ภาคตะวันออก' => ['ชลบุรี', 'ระยอง', 'จันทบุรี', 'ตราด', 'ฉะเชิงเทรา', 'ปราจีนบุรี', 'นครนายก', 'สระแก้ว'],
+        'ภาคตะวันตก' => ['กาญจนบุรี', 'ราชบุรี', 'เพชรบุรี', 'ประจวบคีรีขันธ์', 'สมุทรสงคราม'],
+        'ภาคใต้' => ['ภูเก็ต', 'กระบี่', 'พังงา', 'สุราษฎร์ธานี', 'นครศรีธรรมราช', 'ชุมพร', 'ระนอง', 'ตรัง',
+                        'พัทลุง', 'สตูล', 'สงขลา', 'ปัตตานี', 'ยะลา', 'นราธิวาส'],
+    ];
+}
+
+// Flat list of every province name, for validating submitted values.
+function thai_provinces(): array {
+    return array_merge(...array_values(thai_provinces_by_region()));
 }
 
 function save_cropped_image(string $dataUrl, string $destDir, string $prefix): string|false {
@@ -82,13 +118,23 @@ function get_amenities_for_hotels(mysqli $conn, array $hotelIds): array {
 // filtered results grid) so the markup — including amenity tag badges —
 // can't drift between the different places hotels are listed.
 function render_hotel_card(array $hotel, array $amenities = []): void {
+    $reviewCount = (int) ($hotel["review_count"] ?? 0);
+    $avgRating   = $reviewCount > 0 ? round((float) $hotel["avg_rating"], 1) : null;
     ?>
     <div class="hotel-card">
         <img src="<?= !empty($hotel["image_path"]) ? htmlspecialchars($hotel["image_path"]) : "uploads/hotels/noimage.jpg" ?>"
              alt="Hotel Image">
         <div class="card-content">
             <h3><?= htmlspecialchars($hotel["hotel_name"]) ?></h3>
-            <p><?= htmlspecialchars($hotel["location"]) ?></p>
+            <div class="hotel-card-rating">
+                <?php if ($avgRating !== null): ?>
+                    <span class="hotel-card-score"><span class="material-symbols-outlined">star</span> <?= number_format($avgRating, 1) ?></span>
+                    <span class="hotel-card-reviews"><?= $reviewCount ?> รีวิว</span>
+                <?php else: ?>
+                    <span class="hotel-card-reviews">ยังไม่มีรีวิว</span>
+                <?php endif; ?>
+            </div>
+            <p><?= htmlspecialchars($hotel["location"]) ?><?= !empty($hotel["province"]) ? ' · จ.' . htmlspecialchars($hotel["province"]) : '' ?></p>
             <?php if (!empty($amenities)): ?>
                 <div class="hotel-card-tags">
                     <?php foreach ($amenities as $amenity): ?>
@@ -116,7 +162,8 @@ function render_hotel_card(array $hotel, array $amenities = []): void {
 function render_hotel_category(mysqli $conn, int $categoryId, string $title, bool $isAuto = false): void {
     if ($isAuto) {
         $stmt = $conn->prepare("
-            SELECT hotels.*, hotel_images.image_path
+            SELECT hotels.*, hotel_images.image_path,
+                   " . HOTEL_RATING_COLUMNS . "
             FROM hotels
             LEFT JOIN (
                 SELECT MIN(id) as id, hotel_id
@@ -128,7 +175,8 @@ function render_hotel_category(mysqli $conn, int $categoryId, string $title, boo
         ");
     } else {
         $stmt = $conn->prepare("
-            SELECT hotels.*, hotel_images.image_path
+            SELECT hotels.*, hotel_images.image_path,
+                   " . HOTEL_RATING_COLUMNS . "
             FROM hotel_category_items hci
             JOIN hotels ON hotels.id = hci.hotel_id
             LEFT JOIN (

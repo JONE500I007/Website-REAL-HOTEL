@@ -6,6 +6,11 @@ php/src/.env
 # financial documents that shouldn't end up in version control.
 php/src/uploads/slips/
 
+# Scratch folder of source photos. The ones actually used by the demo seed
+# were copied into php/src/uploads/{hotels,rooms}/ and ARE committed, so the
+# server gets them on a git pull — no need to also carry the originals.
+/This Test/
+
 # OS / editor junk
 .DS_Store
 Thumbs.db

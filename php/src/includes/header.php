@@ -39,12 +39,14 @@ require_once __DIR__ . '/functions.php';
                                 $nav_hasHotel = $nav_stmt->get_result()->num_rows > 0;
                                 $nav_stmt->close();
                             ?>
-                            <a href="manage_hotels.php"><?= $nav_hasHotel ? "แก้ไขโรงแรม" : "เพิ่มโรงแรม" ?></a>
+                            <a href="manage_hotels.php"><?= $nav_hasHotel ? "จัดการโรงแรม" : "เพิ่มโรงแรม" ?></a>
                         <?php endif; ?>
                         <?php if ($_SESSION["role"] === "owner" && $nav_hasHotel): ?>
+                            <a href="owner_dashboard.php">แดชบอร์ดโรงแรม</a>
                             <a href="dashboard_owner.php">ตรวจสอบการจองของโรงแรม</a>
                         <?php endif; ?>
                         <?php if ($_SESSION["role"] === "admin"): ?>
+                            <a href="admin_dashboard.php">แดชบอร์ดระบบ</a>
                             <a href="admin_manage.php">จัดการระบบ</a>
                         <?php endif; ?>
                         <a href="board.php">ดูการจองโรงแรม</a>

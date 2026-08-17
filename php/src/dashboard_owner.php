@@ -14,11 +14,24 @@ if ($_SESSION["role"] !== "owner") {
 
 $owner_id = $_SESSION["user_id"];
 
-$stmt = $conn->prepare("SELECT id, hotel_name FROM hotels WHERE owner_id = ?");
+// One property at a time, same as manage_hotels.php — ?hotel_id= picks it,
+// falling back to the owner's first hotel.
+$stmt = $conn->prepare("SELECT id, hotel_name FROM hotels WHERE owner_id = ? ORDER BY id ASC");
 $stmt->bind_param("i", $owner_id);
 $stmt->execute();
-$hotel = $stmt->get_result()->fetch_assoc();
+$ownerHotels = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
 $stmt->close();
+
+$requestedHotelId = (int) ($_POST["hotel_id"] ?? $_GET["hotel_id"] ?? 0);
+$hotel = null;
+foreach ($ownerHotels as $ownerHotel) {
+    if ((int) $ownerHotel['id'] === $requestedHotelId) {
+        $hotel = $ownerHotel;
+        break;
+    }
+}
+$hotel = $hotel ?: ($ownerHotels[0] ?? null);
+$hotelQuery = $hotel ? "?hotel_id=" . (int) $hotel['id'] : "";
 
 $msg = '';
 $validPaymentStatuses = ['pending_verification', 'confirmed', 'rejected'];
@@ -109,17 +122,34 @@ $statusMeta = [
                 <span class="owner-pending-pill">รอตรวจสอบ <?= $pendingCount ?></span>
             <?php endif; ?>
         </div>
-        <div style="display:flex; gap:10px; align-items:center;">
+        <div class="board-header-actions">
             <?php if ($hotel): ?>
+                <a href="owner_dashboard.php<?= $hotelQuery ?>" class="board-back-btn"><span class="material-symbols-outlined">monitoring</span> ภาพรวมและสถิติ</a>
                 <?php if ($viewCleared): ?>
-                    <a href="dashboard_owner.php" class="board-back-btn"><span class="material-symbols-outlined">arrow_back</span> กลับไปรายการที่ใช้งานอยู่</a>
+                    <a href="dashboard_owner.php<?= $hotelQuery ?>" class="board-back-btn"><span class="material-symbols-outlined">arrow_back</span> กลับไปรายการที่ใช้งานอยู่</a>
                 <?php else: ?>
-                    <a href="dashboard_owner.php?view=cleared" class="board-back-btn"><span class="material-symbols-outlined">archive</span> รายการที่เคลียร์แล้ว</a>
+                    <a href="dashboard_owner.php<?= $hotelQuery ?>&view=cleared" class="board-back-btn"><span class="material-symbols-outlined">archive</span> รายการที่เคลียร์แล้ว</a>
                 <?php endif; ?>
             <?php endif; ?>
-            <a href="index.php" class="board-back-btn"><span class="material-symbols-outlined">home</span> หน้าหลัก</a>
+            <a href="index.php" class="board-back-btn board-btn-home"><span class="material-symbols-outlined">home</span> หน้าหลัก</a>
         </div>
     </div>
+
+    <?php if (count($ownerHotels) > 1): ?>
+        <div class="hotel-switcher">
+            <span class="hotel-switcher-label">
+                <span class="material-symbols-outlined">apartment</span> เลือกโรงแรมที่ต้องการดู
+            </span>
+            <div class="hotel-switcher-tabs">
+                <?php foreach ($ownerHotels as $ownerHotel): ?>
+                    <a href="dashboard_owner.php?hotel_id=<?= (int) $ownerHotel['id'] ?><?= $viewCleared ? '&view=cleared' : '' ?>"
+                       class="hotel-switcher-tab<?= (int) $ownerHotel['id'] === (int) $hotel['id'] ? ' active' : '' ?>">
+                        <?= htmlspecialchars($ownerHotel['hotel_name']) ?>
+                    </a>
+                <?php endforeach; ?>
+            </div>
+        </div>
+    <?php endif; ?>
 
     <?php if (!empty($msg)): ?>
         <div class="alert alert-success"><?= htmlspecialchars($msg) ?></div>
@@ -209,6 +239,7 @@ $statusMeta = [
                         <?php endif; ?>
 
                         <form method="post" class="owner-status-actions">
+                            <input type="hidden" name="hotel_id" value="<?= (int) $hotel["id"] ?>">
                             <input type="hidden" name="id" value="<?= (int) $row["id"] ?>">
                             <?php foreach ($statusMeta as $value => $meta): ?>
                                 <button type="submit" name="payment_status" value="<?= $value ?>"
@@ -219,6 +250,7 @@ $statusMeta = [
                         </form>
 
                         <form method="post" class="owner-status-actions">
+                            <input type="hidden" name="hotel_id" value="<?= (int) $hotel["id"] ?>">
                             <input type="hidden" name="id" value="<?= (int) $row["id"] ?>">
                             <?php if ($viewCleared): ?>
                                 <input type="hidden" name="clear_action" value="restore">

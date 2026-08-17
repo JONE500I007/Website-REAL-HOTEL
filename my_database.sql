@@ -38,13 +38,64 @@ CREATE TABLE `amenities` (
 -- Dumping data for table `amenities`
 --
 
+-- Every `icon` is a Material Symbols Outlined name — the icon font already
+-- loaded in every page header, so no extra icon library is needed.
 INSERT INTO `amenities` (`id`, `title`, `icon`, `display_order`) VALUES
 (1, 'รวมอาหารเช้า', 'free_breakfast', 1),
 (2, 'สระว่ายน้ำ', 'pool', 2),
 (3, 'Wi-Fi ฟรี', 'wifi', 3),
 (4, 'ที่จอดรถฟรี', 'local_parking', 4),
 (5, 'เครื่องปรับอากาศ', 'ac_unit', 5),
-(6, 'ฟิตเนส', 'fitness_center', 6);
+(6, 'ฟิตเนส', 'fitness_center', 6),
+(7, 'ร้านอาหารในโรงแรม', 'restaurant', 7),
+(8, 'บาร์ / เลานจ์', 'local_bar', 8),
+(9, 'คาเฟ่ / ร้านกาแฟ', 'local_cafe', 9),
+(10, 'อาหารเช้าแบบบุฟเฟต์', 'brunch_dining', 10),
+(11, 'รูมเซอร์วิส 24 ชม.', 'room_service', 11),
+(12, 'มุมปิ้งย่าง / บาร์บีคิว', 'outdoor_grill', 12),
+(13, 'เครื่องชงกาแฟในห้อง', 'coffee_maker', 13),
+(14, 'ไมโครเวฟ', 'microwave', 14),
+(15, 'ครัวในห้องพัก', 'kitchen', 15),
+(16, 'สปา & นวดแผนไทย', 'spa', 16),
+(17, 'อ่างจากุซซี่', 'hot_tub', 17),
+(18, 'ห้องโยคะ / คลาสออกกำลังกาย', 'self_improvement', 18),
+(19, 'สนามเทนนิส', 'sports_tennis', 19),
+(20, 'สนามกอล์ฟ', 'golf_course', 20),
+(21, 'ดำน้ำ / กิจกรรมทางน้ำ', 'scuba_diving', 21),
+(22, 'เดินป่า / เทรกกิ้ง', 'hiking', 22),
+(23, 'มุมอ่านหนังสือ', 'library_books', 23),
+(24, 'ติดชายหาด', 'beach_access', 24),
+(25, 'วิวภูเขา / ธรรมชาติ', 'landscape', 25),
+(26, 'สวนหย่อม', 'yard', 26),
+(27, 'ใกล้รถไฟฟ้า / ขนส่งสาธารณะ', 'train', 27),
+(28, 'ทีวีจอแบน', 'tv', 28),
+(29, 'ระเบียงส่วนตัว', 'balcony', 29),
+(30, 'โต๊ะทำงาน', 'desk', 30),
+(31, 'อ่างอาบน้ำ', 'bathtub', 31),
+(32, 'เครื่องทำน้ำอุ่น', 'shower', 32),
+(33, 'เตารีด', 'iron', 33),
+(34, 'ตู้เสื้อผ้า / ตู้นิรภัย', 'checkroom', 34),
+(35, 'ห้องปลอดบุหรี่', 'smoke_free', 35),
+(36, 'พนักงานต้อนรับ 24 ชม.', 'support_agent', 36),
+(37, 'บริการซักรีด', 'local_laundry_service', 37),
+(38, 'เครื่องซักผ้าหยอดเหรียญ', 'wash', 38),
+(39, 'ทำความสะอาดห้องรายวัน', 'cleaning_services', 39),
+(40, 'รับฝากสัมภาระ', 'luggage', 40),
+(41, 'รถรับส่งสนามบิน', 'airport_shuttle', 41),
+(42, 'บริการเช่ารถ / มอเตอร์ไซค์', 'two_wheeler', 42),
+(43, 'จักรยานให้เช่า', 'pedal_bike', 43),
+(44, 'บริการปริ้นเอกสาร', 'print', 44),
+(45, 'แลกเปลี่ยนเงินตรา', 'currency_exchange', 45),
+(46, 'รับบัตรเครดิต', 'credit_card', 46),
+(47, 'ร้านสะดวกซื้อ', 'store', 47),
+(48, 'ห้องประชุม / สัมมนา', 'meeting_room', 48),
+(49, 'ลิฟต์', 'elevator', 49),
+(50, 'รปภ. 24 ชม.', 'security', 50),
+(51, 'ที่ชาร์จรถไฟฟ้า (EV)', 'ev_station', 51),
+(52, 'สิ่งอำนวยความสะดวกผู้พิการ', 'accessible', 52),
+(53, 'เหมาะสำหรับเด็ก', 'child_friendly', 53),
+(54, 'เตียงเด็กเสริม', 'crib', 54),
+(55, 'อนุญาตให้นำสัตว์เลี้ยง', 'pets', 55);
 
 -- --------------------------------------------------------
 
@@ -66,16 +117,17 @@ CREATE TABLE `bookings` (
   `book_hotel_name` text CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,
   `total_price` decimal(10,2) NOT NULL DEFAULT '0.00',
   `payment_slip` varchar(255) DEFAULT NULL,
-  `payment_status` varchar(20) NOT NULL DEFAULT 'pending_verification'
+  `payment_status` varchar(20) NOT NULL DEFAULT 'pending_verification',
+  `owner_cleared` tinyint(1) NOT NULL DEFAULT '0'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 --
 -- Dumping data for table `bookings`
 --
 
-INSERT INTO `bookings` (`id`, `first_name`, `last_name`, `email`, `phone`, `checkin`, `checkout`, `guests`, `hotel_id`, `room_type_id`, `book_hotel_name`, `total_price`, `payment_slip`, `payment_status`) VALUES
-(1, 'A', 'B', 'a@a.com', '0800000000', '2026-09-01', '2026-09-02', 1, NULL, NULL, 'X', 0.00, NULL, 'pending_verification'),
-(8, 'ONE', 'OF THE TEST MEME DO NOT A TEST', 'ingkawat2023reals@gmail.com', '0993113131', '2026-07-11', '2026-07-12', 1, 1, 6, 'awdawdawd', 1111.00, 'slip_6a52071fe408c.png', 'confirmed');
+INSERT INTO `bookings` (`id`, `first_name`, `last_name`, `email`, `phone`, `checkin`, `checkout`, `guests`, `hotel_id`, `room_type_id`, `book_hotel_name`, `total_price`, `payment_slip`, `payment_status`, `owner_cleared`) VALUES
+(1, 'A', 'B', 'a@a.com', '0800000000', '2026-09-01', '2026-09-02', 1, NULL, NULL, 'X', 0.00, NULL, 'pending_verification', 0),
+(8, 'ONE', 'OF THE TEST MEME DO NOT A TEST', 'ingkawat2023reals@gmail.com', '0993113131', '2026-07-11', '2026-07-12', 1, 1, 6, 'awdawdawd', 1111.00, 'slip_6a52071fe408c.png', 'confirmed', 0);
 
 -- --------------------------------------------------------
 
@@ -87,6 +139,7 @@ CREATE TABLE `hotels` (
   `id` int NOT NULL,
   `hotel_name` text CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,
   `location` text CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,
+  `province` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL DEFAULT '',
   `latitude` decimal(10,7) DEFAULT NULL,
   `longitude` decimal(10,7) DEFAULT NULL,
   `price` text NOT NULL,
@@ -101,8 +154,8 @@ CREATE TABLE `hotels` (
 -- Dumping data for table `hotels`
 --
 
-INSERT INTO `hotels` (`id`, `hotel_name`, `location`, `latitude`, `longitude`, `price`, `description`, `facilities`, `surrounding`, `type`, `owner_id`) VALUES
-(1, 'awdawdawd', 'ไม่บอกหนอก', 17.3663673, 101.4518738, '1000.599', 'awdawdawd', '123123', '12412414awdawdawd', '', 5);
+INSERT INTO `hotels` (`id`, `hotel_name`, `location`, `province`, `latitude`, `longitude`, `price`, `description`, `facilities`, `surrounding`, `type`, `owner_id`) VALUES
+(1, 'awdawdawd', 'ไม่บอกหนอก', '', 17.3663673, 101.4518738, '1000.599', 'awdawdawd', '123123', '12412414awdawdawd', '', 5);
 
 -- --------------------------------------------------------
 
@@ -202,6 +255,13 @@ INSERT INTO `hotel_images` (`id`, `hotel_id`, `image_path`) VALUES
 -- Table structure for table `reviews`
 --
 
+-- Three kinds of row share this table:
+--   review  = parent_id IS NULL AND rating IS NOT NULL   (max 1 per user/hotel)
+--   comment = parent_id IS NULL AND rating IS NULL       (unlimited)
+--   reply   = parent_id IS NOT NULL                      (unlimited)
+-- `is_rated_review` exists purely so a UNIQUE key can enforce that limit —
+-- it is 1 only for reviews and NULL otherwise, and unique indexes ignore
+-- NULLs, so comments and replies stay unrestricted.
 CREATE TABLE `reviews` (
   `id` int NOT NULL,
   `hotel_id` int NOT NULL,
@@ -210,7 +270,9 @@ CREATE TABLE `reviews` (
   `rating` tinyint DEFAULT NULL,
   `comment` text NOT NULL,
   `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  `updated_at` timestamp NULL DEFAULT NULL
+  `updated_at` timestamp NULL DEFAULT NULL,
+  `is_rated_review` tinyint(1) GENERATED ALWAYS AS
+    (CASE WHEN `parent_id` IS NULL AND `rating` IS NOT NULL THEN 1 ELSE NULL END) STORED
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 --
@@ -318,7 +380,8 @@ INSERT INTO `users` (`id`, `full_name`, `email`, `phone_number`, `password`, `ro
 -- Indexes for table `amenities`
 --
 ALTER TABLE `amenities`
-  ADD PRIMARY KEY (`id`);
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `idx_amenity_title` (`title`);
 
 --
 -- Indexes for table `bookings`
@@ -367,6 +430,7 @@ ALTER TABLE `hotel_images`
 --
 ALTER TABLE `reviews`
   ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `idx_one_review_per_user_hotel` (`hotel_id`,`user_id`,`is_rated_review`),
   ADD KEY `idx_reviews_hotel` (`hotel_id`),
   ADD KEY `idx_reviews_parent` (`parent_id`),
   ADD KEY `idx_reviews_user` (`user_id`);
@@ -399,7 +463,7 @@ ALTER TABLE `users`
 -- AUTO_INCREMENT for table `amenities`
 --
 ALTER TABLE `amenities`
-  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
+  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=56;
 
 --
 -- AUTO_INCREMENT for table `bookings`

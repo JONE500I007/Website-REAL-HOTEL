@@ -56,6 +56,15 @@ $current_user_id = $_SESSION["user_id"] ?? null;
 $isAdmin = ($_SESSION["role"] ?? '') === 'admin';
 $reviewError = '';
 
+// Three kinds of post share the `reviews` table:
+//   review  = top-level WITH a rating   (parent_id IS NULL AND rating IS NOT NULL)
+//   comment = top-level WITHOUT a rating (parent_id IS NULL AND rating IS NULL)
+//   reply   = any row with a parent_id
+// Only reviews are rate-limited and star-averaged; comments and replies stay
+// open to everyone so a hotel owner can still answer questions on their own
+// listing without being able to inflate its score.
+$isHotelOwner = $current_user_id && (int) $hotel["owner_id"] === (int) $current_user_id;
+
 if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST["review_action"])) {
     if (!$current_user_id) {
         header("Location: login.php?error=login_required");
@@ -68,42 +77,87 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST["review_action"])) {
         $rating  = (int) ($_POST["rating"] ?? 0);
         $comment = trim($_POST["comment"] ?? '');
 
-        if ($rating < 1 || $rating > 5) {
+        if ($isHotelOwner) {
+            $reviewError = "คุณเป็นเจ้าของโรงแรมนี้ จึงให้คะแนนรีวิวโรงแรมตัวเองไม่ได้ แต่ยังแสดงความคิดเห็นและตอบกลับได้";
+        } elseif ($rating < 1 || $rating > 5) {
             $reviewError = "กรุณาให้คะแนนระหว่าง 1-5 ดาว";
         } elseif ($comment === '') {
             $reviewError = "กรุณาเขียนความคิดเห็น";
         } else {
-            $check = $conn->prepare("SELECT id FROM reviews WHERE hotel_id = ? AND user_id = ? AND parent_id IS NULL");
+            // Scoped to rating IS NOT NULL so the visitor's own comments don't
+            // count as "already reviewed" and block their one real review.
+            $check = $conn->prepare("SELECT id FROM reviews WHERE hotel_id = ? AND user_id = ? AND parent_id IS NULL AND rating IS NOT NULL");
             $check->bind_param("ii", $hotel_id, $current_user_id);
             $check->execute();
             $alreadyReviewed = $check->get_result()->num_rows > 0;
             $check->close();
 
             if ($alreadyReviewed) {
-                $reviewError = "คุณได้รีวิวโรงแรมนี้ไปแล้ว";
+                $reviewError = "คุณได้รีวิวโรงแรมนี้ไปแล้ว (รีวิวได้ 1 ครั้งต่อ 1 โรงแรม) — แก้ไขรีวิวเดิมของคุณได้";
             } else {
-                $ins = $conn->prepare("INSERT INTO reviews (hotel_id, user_id, rating, comment) VALUES (?, ?, ?, ?)");
-                $ins->bind_param("iiis", $hotel_id, $current_user_id, $rating, $comment);
-                $ins->execute();
-                $ins->close();
-                header("Location: hotel_detail.php?id=$hotel_id#reviews");
-                exit;
+                // The SELECT above and this INSERT are not atomic, so two
+                // quick submits could both pass the check. The unique key
+                // idx_one_review_per_user_hotel is the real guarantee; catch
+                // its duplicate error and show the normal message instead of
+                // letting an uncaught mysqli exception blank the page.
+                try {
+                    $ins = $conn->prepare("INSERT INTO reviews (hotel_id, user_id, rating, comment) VALUES (?, ?, ?, ?)");
+                    $ins->bind_param("iiis", $hotel_id, $current_user_id, $rating, $comment);
+                    $ins->execute();
+                    $ins->close();
+                    header("Location: hotel_detail.php?id=$hotel_id#reviews");
+                    exit;
+                } catch (mysqli_sql_exception $e) {
+                    if ($e->getCode() === 1062) {
+                        $reviewError = "คุณได้รีวิวโรงแรมนี้ไปแล้ว (รีวิวได้ 1 ครั้งต่อ 1 โรงแรม)";
+                    } else {
+                        throw $e;
+                    }
+                }
             }
+        }
+    }
+
+    // A top-level post with no rating. Unlimited, and open to the owner too.
+    if ($action === "add_comment") {
+        $comment = trim($_POST["comment"] ?? '');
+
+        if ($comment === '') {
+            $reviewError = "กรุณาเขียนความคิดเห็น";
+        } else {
+            $ins = $conn->prepare("INSERT INTO reviews (hotel_id, user_id, rating, comment) VALUES (?, ?, NULL, ?)");
+            $ins->bind_param("iis", $hotel_id, $current_user_id, $comment);
+            $ins->execute();
+            $ins->close();
+            header("Location: hotel_detail.php?id=$hotel_id#reviews");
+            exit;
         }
     }
 
     if ($action === "edit_review") {
         $review_id = (int) ($_POST["review_id"] ?? 0);
         $comment   = trim($_POST["comment"] ?? '');
-        $hasRating = isset($_POST["rating"]) && $_POST["rating"] !== '';
-        $rating    = $hasRating ? (int) $_POST["rating"] : null;
 
-        if ($comment === '') {
+        // Whether a rating may be written is decided by the stored row, never
+        // by the submitted form: trusting the POST let anyone attach a rating
+        // to a reply or a plain comment and mint a second scoring row.
+        $own = $conn->prepare("SELECT rating, parent_id FROM reviews WHERE id = ? AND user_id = ? AND hotel_id = ?");
+        $own->bind_param("iii", $review_id, $current_user_id, $hotel_id);
+        $own->execute();
+        $target = $own->get_result()->fetch_assoc();
+        $own->close();
+
+        $isRatedReview = $target && $target['parent_id'] === null && $target['rating'] !== null;
+        $rating        = (int) ($_POST["rating"] ?? 0);
+
+        if (!$target) {
+            $reviewError = "ไม่พบรายการที่ต้องการแก้ไข";
+        } elseif ($comment === '') {
             $reviewError = "กรุณาเขียนความคิดเห็น";
-        } elseif ($hasRating && ($rating < 1 || $rating > 5)) {
+        } elseif ($isRatedReview && ($rating < 1 || $rating > 5)) {
             $reviewError = "กรุณาให้คะแนนระหว่าง 1-5 ดาว";
         } else {
-            if ($hasRating) {
+            if ($isRatedReview) {
                 $upd = $conn->prepare("UPDATE reviews SET comment = ?, rating = ?, updated_at = NOW() WHERE id = ? AND user_id = ?");
                 $upd->bind_param("siii", $comment, $rating, $review_id, $current_user_id);
             } else {
@@ -166,13 +220,26 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST["review_action"])) {
     }
 }
 
-$avg_stmt = $conn->prepare("SELECT AVG(rating) AS avg_rating, COUNT(*) AS review_count FROM reviews WHERE hotel_id = ? AND parent_id IS NULL");
+// Only rated rows feed the star average — unrated comments would otherwise
+// inflate the review count with posts that carry no score at all.
+$avg_stmt = $conn->prepare("
+    SELECT AVG(rating) AS avg_rating,
+           COUNT(*)    AS review_count
+    FROM reviews
+    WHERE hotel_id = ? AND parent_id IS NULL AND rating IS NOT NULL
+");
 $avg_stmt->bind_param("i", $hotel_id);
 $avg_stmt->execute();
 $ratingSummary = $avg_stmt->get_result()->fetch_assoc();
 $avg_stmt->close();
 $avgRating   = $ratingSummary['avg_rating'] !== null ? round((float) $ratingSummary['avg_rating'], 1) : 0.0;
 $reviewCount = (int) $ratingSummary['review_count'];
+
+$commentCountRow = $conn->prepare("SELECT COUNT(*) AS c FROM reviews WHERE hotel_id = ? AND parent_id IS NULL AND rating IS NULL");
+$commentCountRow->bind_param("i", $hotel_id);
+$commentCountRow->execute();
+$commentCount = (int) $commentCountRow->get_result()->fetch_assoc()['c'];
+$commentCountRow->close();
 
 $top_stmt = $conn->prepare("
     SELECT r.*, u.full_name, u.profile_picture
@@ -201,15 +268,19 @@ foreach ($reply_stmt->get_result()->fetch_all(MYSQLI_ASSOC) as $reply) {
 }
 $reply_stmt->close();
 
+// Drives "you already reviewed this" — matches only the visitor's RATED row,
+// so their own unrated comments never hide the review form from them.
 $myReviewId = null;
 if ($current_user_id) {
     foreach ($topReviews as $r) {
-        if ((int) $r['user_id'] === (int) $current_user_id) {
+        if ((int) $r['user_id'] === (int) $current_user_id && $r['rating'] !== null) {
             $myReviewId = (int) $r['id'];
             break;
         }
     }
 }
+
+$canWriteReview = $current_user_id && !$isHotelOwner && $myReviewId === null;
 ?>
 <!DOCTYPE html>
 <html lang="th">
@@ -245,7 +316,9 @@ if ($current_user_id) {
         </div>
 
         <div class="hotel-address">
-            <p><?= htmlspecialchars($hotel["location"]) ?></p>
+            <p>
+                <?= htmlspecialchars($hotel["location"]) ?><?= !empty($hotel["province"]) ? ' · จ.' . htmlspecialchars($hotel["province"]) : '' ?>
+            </p>
         </div>
 
         <?php if (!empty($hotelAmenities)): ?>
@@ -357,7 +430,13 @@ if ($current_user_id) {
         <?php endif; ?>
 
         <div class="detail-box" id="reviews" style="margin-top:20px;">
-            <h3><span class="material-symbols-outlined">rate_review</span> รีวิวจากผู้เข้าพัก (<?= $reviewCount ?>)</h3>
+            <h3>
+                <span class="material-symbols-outlined">rate_review</span>
+                รีวิวและความคิดเห็น
+                <span class="review-head-counts">
+                    <?= $reviewCount ?> รีวิว<?= $commentCount > 0 ? ' · ' . $commentCount . ' ความคิดเห็น' : '' ?>
+                </span>
+            </h3>
 
             <?php if (!empty($reviewError)): ?>
                 <div class="alert alert-danger"><span class="material-symbols-outlined">warning</span> <?= htmlspecialchars($reviewError) ?></div>
@@ -365,37 +444,83 @@ if ($current_user_id) {
 
             <?php if (!$current_user_id): ?>
                 <p class="review-login-hint">
-                    <a href="login.php">เข้าสู่ระบบ</a> เพื่อเขียนรีวิวโรงแรมนี้
+                    <a href="login.php">เข้าสู่ระบบ</a> เพื่อรีวิวหรือแสดงความคิดเห็นเกี่ยวกับโรงแรมนี้
                 </p>
-            <?php elseif ($myReviewId === null): ?>
-                <form method="post" class="review-form">
-                    <input type="hidden" name="review_action" value="add_review">
-                    <div class="star-picker">
-                        <?php for ($i = 5; $i >= 1; $i--): ?>
-                            <input type="radio" name="rating" id="rate<?= $i ?>" value="<?= $i ?>" required>
-                            <label for="rate<?= $i ?>">★</label>
-                        <?php endfor; ?>
-                    </div>
-                    <textarea name="comment" placeholder="เล่าประสบการณ์การเข้าพักของคุณ..." rows="3" required></textarea>
-                    <button type="submit" class="auth-btn" style="width:auto; padding:10px 26px;">
-                        <span class="material-symbols-outlined">send</span> โพสต์รีวิว
+            <?php else: ?>
+
+                <?php if ($canWriteReview): ?>
+                    <form method="post" class="review-form">
+                        <input type="hidden" name="review_action" value="add_review">
+                        <span class="review-form-label">ให้คะแนนและเขียนรีวิว (รีวิวได้ 1 ครั้งต่อโรงแรม)</span>
+                        <div class="star-picker">
+                            <?php for ($i = 5; $i >= 1; $i--): ?>
+                                <input type="radio" name="rating" id="rate<?= $i ?>" value="<?= $i ?>" required>
+                                <label for="rate<?= $i ?>">★</label>
+                            <?php endfor; ?>
+                        </div>
+                        <textarea name="comment" placeholder="เล่าประสบการณ์การเข้าพักของคุณ..." rows="3" required></textarea>
+                        <button type="submit" class="auth-btn" style="width:auto; padding:10px 26px;">
+                            <span class="material-symbols-outlined">send</span> โพสต์รีวิว
+                        </button>
+                    </form>
+                <?php elseif ($isHotelOwner): ?>
+                    <p class="review-notice">
+                        <span class="material-symbols-outlined">info</span>
+                        คุณเป็นเจ้าของโรงแรมนี้ จึงให้คะแนนรีวิวโรงแรมตัวเองไม่ได้
+                        แต่ยังแสดงความคิดเห็นและตอบกลับผู้เข้าพักได้ตามปกติ
+                    </p>
+                <?php else: ?>
+                    <p class="review-notice">
+                        <span class="material-symbols-outlined">check_circle</span>
+                        คุณรีวิวโรงแรมนี้ไปแล้ว (รีวิวได้ 1 ครั้งต่อโรงแรม) — เลื่อนลงไปแก้ไขรีวิวของคุณได้
+                        และยังแสดงความคิดเห็นเพิ่มได้ไม่จำกัด
+                    </p>
+                <?php endif; ?>
+
+                <!-- Always available: an unrated post, so the owner and anyone
+                     who has used up their one review can still take part. -->
+                <form method="post" class="review-form review-comment-form">
+                    <input type="hidden" name="review_action" value="add_comment">
+                    <span class="review-form-label">
+                        <span class="material-symbols-outlined">chat</span> แสดงความคิดเห็น (ไม่ให้คะแนนดาว)
+                    </span>
+                    <textarea name="comment" placeholder="สอบถามหรือพูดคุยเกี่ยวกับโรงแรมนี้..." rows="2" required></textarea>
+                    <button type="submit" class="btn-table-view">
+                        <span class="material-symbols-outlined">send</span> โพสต์ความคิดเห็น
                     </button>
                 </form>
             <?php endif; ?>
 
             <div class="review-list">
                 <?php foreach ($topReviews as $review): ?>
-                    <?php $isMine = $current_user_id && (int) $review['user_id'] === (int) $current_user_id; ?>
-                    <div class="review-card" id="review-<?= (int) $review['id'] ?>">
+                    <?php
+                        $isMine      = $current_user_id && (int) $review['user_id'] === (int) $current_user_id;
+                        $isRated     = $review['rating'] !== null;
+                        $byHotelOwner = (int) $review['user_id'] === (int) $hotel['owner_id'];
+                    ?>
+                    <div class="review-card<?= $isRated ? '' : ' review-card-comment' ?>" id="review-<?= (int) $review['id'] ?>">
                         <div class="review-view" id="reviewView-<?= (int) $review['id'] ?>">
                             <div class="review-top">
                                 <img class="review-avatar" src="<?= htmlspecialchars(resolve_upload_src($review['profile_picture'])) ?>" alt="">
                                 <div>
-                                    <div class="review-author"><?= htmlspecialchars($review['full_name']) ?></div>
+                                    <div class="review-author">
+                                        <?= htmlspecialchars($review['full_name']) ?>
+                                        <?php if ($byHotelOwner): ?>
+                                            <span class="review-owner-badge">
+                                                <span class="material-symbols-outlined">verified</span> เจ้าของโรงแรม
+                                            </span>
+                                        <?php endif; ?>
+                                    </div>
                                     <div class="review-stars">
-                                        <?php for ($i = 1; $i <= 5; $i++): ?>
-                                            <span class="star<?= $i <= (int) $review['rating'] ? ' star-filled' : '' ?>">★</span>
-                                        <?php endfor; ?>
+                                        <?php if ($isRated): ?>
+                                            <?php for ($i = 1; $i <= 5; $i++): ?>
+                                                <span class="star<?= $i <= (int) $review['rating'] ? ' star-filled' : '' ?>">★</span>
+                                            <?php endfor; ?>
+                                        <?php else: ?>
+                                            <span class="review-type-tag">
+                                                <span class="material-symbols-outlined">chat</span> ความคิดเห็น
+                                            </span>
+                                        <?php endif; ?>
                                         <span class="review-date"><?= (new DateTime($review['created_at']))->format('d M Y') ?><?= $review['updated_at'] ? ' (แก้ไขแล้ว)' : '' ?></span>
                                     </div>
                                 </div>
@@ -417,7 +542,7 @@ if ($current_user_id) {
                                         <input type="hidden" name="review_action" value="delete_review">
                                         <input type="hidden" name="review_id" value="<?= (int) $review['id'] ?>">
                                         <button type="submit" class="review-link-btn review-link-danger"
-                                                onclick="return confirm('ลบรีวิวนี้ใช่หรือไม่? คำตอบกลับทั้งหมดจะถูกลบไปด้วย');">
+                                                onclick="return confirm('ลบ<?= $isRated ? 'รีวิว' : 'ความคิดเห็น' ?>นี้ใช่หรือไม่? คำตอบกลับทั้งหมดจะถูกลบไปด้วย');">
                                             <span class="material-symbols-outlined">delete</span> ลบ<?= (!$isMine && $isAdmin) ? ' (Admin)' : '' ?>
                                         </button>
                                     </form>
@@ -429,12 +554,14 @@ if ($current_user_id) {
                         <form method="post" class="review-form review-edit-form" id="reviewEdit-<?= (int) $review['id'] ?>" style="display:none">
                             <input type="hidden" name="review_action" value="edit_review">
                             <input type="hidden" name="review_id" value="<?= (int) $review['id'] ?>">
-                            <div class="star-picker">
-                                <?php for ($i = 5; $i >= 1; $i--): ?>
-                                    <input type="radio" name="rating" id="editRate<?= (int) $review['id'] . '_' . $i ?>" value="<?= $i ?>" <?= $i === (int) $review['rating'] ? 'checked' : '' ?> required>
-                                    <label for="editRate<?= (int) $review['id'] . '_' . $i ?>">★</label>
-                                <?php endfor; ?>
-                            </div>
+                            <?php if ($isRated): ?>
+                                <div class="star-picker">
+                                    <?php for ($i = 5; $i >= 1; $i--): ?>
+                                        <input type="radio" name="rating" id="editRate<?= (int) $review['id'] . '_' . $i ?>" value="<?= $i ?>" <?= $i === (int) $review['rating'] ? 'checked' : '' ?> required>
+                                        <label for="editRate<?= (int) $review['id'] . '_' . $i ?>">★</label>
+                                    <?php endfor; ?>
+                                </div>
+                            <?php endif; ?>
                             <textarea name="comment" rows="3" required><?= htmlspecialchars($review['comment']) ?></textarea>
                             <div style="display:flex; gap:8px;">
                                 <button type="submit" class="auth-btn" style="width:auto; padding:8px 20px;">บันทึก</button>
@@ -464,7 +591,14 @@ if ($current_user_id) {
                                         <div class="review-top">
                                             <img class="review-avatar review-avatar-sm" src="<?= htmlspecialchars(resolve_upload_src($reply['profile_picture'])) ?>" alt="">
                                             <div>
-                                                <div class="review-author"><?= htmlspecialchars($reply['full_name']) ?></div>
+                                                <div class="review-author">
+                                                    <?= htmlspecialchars($reply['full_name']) ?>
+                                                    <?php if ((int) $reply['user_id'] === (int) $hotel['owner_id']): ?>
+                                                        <span class="review-owner-badge">
+                                                            <span class="material-symbols-outlined">verified</span> เจ้าของโรงแรม
+                                                        </span>
+                                                    <?php endif; ?>
+                                                </div>
                                                 <span class="review-date"><?= (new DateTime($reply['created_at']))->format('d M Y') ?><?= $reply['updated_at'] ? ' (แก้ไขแล้ว)' : '' ?></span>
                                             </div>
                                         </div>

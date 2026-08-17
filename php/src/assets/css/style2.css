@@ -4084,6 +4084,17 @@ body {
     border-color: #7b59a9;
 }
 
+/* Tone .styled-select down to match the sidebar's lighter filter inputs —
+   its default 2px purple border is built for the darker admin forms. */
+.filter-province-select {
+    border-width: 1.5px;
+    border-color: #e5dcf5;
+    padding: 9px 30px 9px 12px;
+    font-family: inherit;
+    font-size: 14px;
+    box-sizing: border-box;
+}
+
 .price-input-row {
     display: flex;
     align-items: flex-end;
@@ -4373,3 +4384,1083 @@ body {
     color: #fff;
 }
 
+
+/* ===================================================================
+   Owner hotel switcher (manage_hotels.php, dashboard_owner.php)
+   An owner can run several properties, so these pages work on one at a
+   time and this strip picks which.
+   =================================================================== */
+.hotel-switcher {
+    background: #f7f3fc;
+    border: 1px solid #e5dcf5;
+    border-radius: 12px;
+    padding: 14px 16px;
+    margin-bottom: 22px;
+}
+
+.hotel-switcher-label {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 13px;
+    font-weight: 600;
+    color: #5d3f8c;
+    margin-bottom: 10px;
+}
+
+.hotel-switcher-label .material-symbols-outlined { font-size: 18px; }
+
+.hotel-switcher-tabs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.hotel-switcher-tab {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 8px 14px;
+    border-radius: 8px;
+    background: #fff;
+    border: 1.5px solid #e5dcf5;
+    color: #5d3f8c;
+    font-size: 14px;
+    text-decoration: none;
+    transition: background .15s, border-color .15s, color .15s;
+}
+
+.hotel-switcher-tab:hover {
+    border-color: #7b59a9;
+    background: #f3ecfb;
+}
+
+.hotel-switcher-tab.active {
+    background: #7b59a9;
+    border-color: #7b59a9;
+    color: #fff;
+}
+
+.hotel-switcher-add {
+    border-style: dashed;
+}
+
+.hotel-switcher-tab .material-symbols-outlined { font-size: 18px; }
+
+/* ===================================================================
+   Owner dashboard (owner_dashboard.php)
+   =================================================================== */
+.owner-portfolio-bar {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1px;
+    background: #e5dcf5;
+    border: 1px solid #e5dcf5;
+    border-radius: 14px;
+    overflow: hidden;
+    margin-bottom: 22px;
+}
+
+.owner-portfolio-item {
+    background: #fff;
+    padding: 16px 18px;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.owner-portfolio-alert { background: #fff8f0; }
+
+.owner-portfolio-value {
+    font-size: 21px;
+    font-weight: 600;
+    color: #4b3270;
+}
+
+.owner-portfolio-label {
+    font-size: 12px;
+    color: #8a7ba3;
+}
+
+.owner-section-sub {
+    font-size: 14px;
+    font-weight: 400;
+    color: #8a7ba3;
+    margin-left: 8px;
+}
+
+.owner-status-breakdown {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 10px;
+}
+
+.owner-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 6px 12px;
+    border-radius: 20px;
+    background: #f2edf9;
+    color: #5d3f8c;
+    font-size: 13px;
+    white-space: nowrap;
+}
+
+.owner-chip .material-symbols-outlined { font-size: 16px; }
+
+.owner-chip.status-confirmed { background: #e7f6ec; color: #1e7a3c; }
+.owner-chip.status-pending   { background: #fff3e0; color: #a35b00; }
+.owner-chip.status-rejected  { background: #fdeaea; color: #a32020; }
+
+/* ---- 6-month bar chart ---- */
+.owner-chart-card {
+    background: #fff;
+    border: 1px solid #ede5f8;
+    border-radius: 14px;
+    box-shadow: 0 3px 16px rgba(93,63,140,0.09);
+    padding: 22px 20px 16px;
+    margin-bottom: 32px;
+}
+
+.owner-chart {
+    display: flex;
+    align-items: flex-end;
+    gap: 10px;
+    height: 190px;
+}
+
+.owner-chart-col {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-end;
+    height: 100%;
+    gap: 6px;
+}
+
+.owner-chart-count {
+    font-size: 13px;
+    font-weight: 600;
+    color: #5d3f8c;
+}
+
+.owner-chart-bar {
+    width: 100%;
+    max-width: 54px;
+    border-radius: 8px 8px 0 0;
+    background: linear-gradient(180deg, #9370c4 0%, #7b59a9 100%);
+    transition: filter .15s;
+}
+
+.owner-chart-col:hover .owner-chart-bar { filter: brightness(1.12); }
+
+.owner-chart-month {
+    font-size: 12px;
+    color: #8a7ba3;
+}
+
+.owner-chart-hint {
+    margin: 14px 0 0;
+    font-size: 12px;
+    color: #8a7ba3;
+    text-align: center;
+}
+
+/* ---- Per-room occupancy meter ---- */
+.owner-room-cap {
+    display: block;
+    font-size: 12px;
+    color: #8a7ba3;
+    margin-top: 2px;
+}
+
+.owner-occupancy {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-width: 110px;
+}
+
+.owner-occupancy-bar {
+    flex: 1;
+    height: 7px;
+    border-radius: 4px;
+    background: #efe8f8;
+    overflow: hidden;
+}
+
+.owner-occupancy-fill {
+    height: 100%;
+    border-radius: 4px;
+    background: #7b59a9;
+}
+
+/* ---- Upcoming arrivals ---- */
+.owner-arrival-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 12px;
+    margin-bottom: 32px;
+}
+
+.owner-arrival-card {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    background: #fff;
+    border: 1px solid #ede5f8;
+    border-radius: 12px;
+    padding: 14px 16px;
+}
+
+.owner-arrival-date {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-width: 50px;
+    padding: 8px 0;
+    border-radius: 10px;
+    background: #f2edf9;
+    color: #5d3f8c;
+}
+
+.owner-arrival-day {
+    font-size: 20px;
+    font-weight: 600;
+    line-height: 1;
+}
+
+.owner-arrival-month {
+    font-size: 11px;
+    margin-top: 2px;
+}
+
+.owner-arrival-body {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    flex: 1;
+    min-width: 0;
+    font-size: 13px;
+    color: #6b5b85;
+}
+
+.owner-arrival-body strong {
+    font-size: 15px;
+    color: #4b3270;
+}
+
+@media (max-width: 900px) {
+    .owner-portfolio-bar { grid-template-columns: repeat(2, 1fr); }
+}
+
+@media (max-width: 600px) {
+    .owner-portfolio-bar { grid-template-columns: 1fr; }
+    .owner-chart { height: 150px; gap: 6px; }
+    .owner-chart-month { font-size: 10px; }
+}
+
+/* ===================================================================
+   Admin dashboard (admin_dashboard.php)
+   =================================================================== */
+.admin-search-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-bottom: 18px;
+}
+
+.admin-search-row .filter-text-input {
+    flex: 1;
+    min-width: 220px;
+    padding: 11px 14px;
+    font-size: 15px;
+}
+
+/* ---- Hotel list rows ---- */
+.admin-hotel-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.admin-hotel-row {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    background: #fff;
+    border: 1px solid #ede5f8;
+    border-radius: 14px;
+    padding: 12px 16px;
+    text-decoration: none;
+    color: inherit;
+    box-shadow: 0 2px 10px rgba(93,63,140,0.06);
+    transition: border-color .15s, box-shadow .15s, transform .15s;
+}
+
+.admin-hotel-row:hover {
+    border-color: #b79ee0;
+    box-shadow: 0 6px 20px rgba(93,63,140,0.14);
+    transform: translateY(-1px);
+}
+
+.admin-hotel-row.active {
+    border-color: #7b59a9;
+    background: #faf7fe;
+}
+
+.admin-hotel-thumb {
+    width: 84px;
+    height: 62px;
+    object-fit: cover;
+    border-radius: 10px;
+    flex-shrink: 0;
+}
+
+.admin-hotel-main {
+    flex: 1;
+    min-width: 0;
+}
+
+.admin-hotel-name {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+    font-size: 16px;
+    font-weight: 600;
+    color: #4b3270;
+    margin-bottom: 4px;
+}
+
+.admin-hotel-badge {
+    font-size: 11px;
+    font-weight: 400;
+    padding: 3px 9px;
+    border-radius: 20px;
+    background: #fff3e0;
+    color: #a35b00;
+}
+
+.admin-hotel-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 14px;
+    font-size: 13px;
+    color: #8a7ba3;
+}
+
+.admin-hotel-meta span {
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+}
+
+.admin-hotel-meta .material-symbols-outlined { font-size: 15px; }
+
+.admin-hotel-figures {
+    display: flex;
+    gap: 22px;
+    flex-shrink: 0;
+}
+
+.admin-hotel-figures div {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-width: 56px;
+}
+
+.admin-hotel-figures strong {
+    font-size: 16px;
+    color: #5d3f8c;
+}
+
+.admin-hotel-figures span {
+    font-size: 11px;
+    color: #8a7ba3;
+}
+
+.admin-hotel-arrow {
+    color: #b79ee0;
+    flex-shrink: 0;
+}
+
+/* ---- Drill-down detail panel ---- */
+.admin-detail-close {
+    float: right;
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    font-size: 13px;
+    font-weight: 400;
+    color: #8a7ba3;
+    text-decoration: none;
+}
+
+.admin-detail-close:hover { color: #7b59a9; }
+.admin-detail-close .material-symbols-outlined { font-size: 17px; }
+
+.admin-detail-card {
+    background: #fff;
+    border: 1px solid #ede5f8;
+    border-radius: 16px;
+    box-shadow: 0 4px 20px rgba(93,63,140,0.10);
+    padding: 22px;
+    margin-bottom: 34px;
+}
+
+.admin-detail-head {
+    display: flex;
+    gap: 20px;
+    flex-wrap: wrap;
+    margin-bottom: 10px;
+}
+
+.admin-detail-cover {
+    width: 260px;
+    height: 180px;
+    object-fit: cover;
+    border-radius: 12px;
+    flex-shrink: 0;
+}
+
+.admin-detail-info {
+    flex: 1;
+    min-width: 260px;
+}
+
+.admin-detail-info h3 {
+    margin: 0 0 8px;
+    font-size: 22px;
+    color: #4b3270;
+}
+
+.admin-detail-info p {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    margin: 3px 0;
+    font-size: 14px;
+    color: #6b5b85;
+}
+
+.admin-detail-info p .material-symbols-outlined {
+    font-size: 17px;
+    color: #a48fd0;
+}
+
+.admin-detail-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 14px;
+}
+
+.admin-detail-actions a {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    text-decoration: none;
+}
+
+.admin-detail-subtitle {
+    margin: 26px 0 12px;
+    font-size: 16px;
+    color: #5d3f8c;
+}
+
+@media (max-width: 780px) {
+    .admin-hotel-row { flex-wrap: wrap; }
+    .admin-hotel-thumb { width: 64px; height: 48px; }
+    .admin-hotel-figures {
+        width: 100%;
+        justify-content: space-between;
+        gap: 8px;
+        padding-top: 8px;
+        border-top: 1px solid #f0eaf9;
+    }
+    .admin-hotel-arrow { display: none; }
+    .admin-detail-cover { width: 100%; height: 200px; }
+}
+
+/* ===================================================================
+   MOBILE UX PASS
+   Appended last so these rules win over the earlier breakpoints they
+   correct. Grouped by the problem each block solves.
+   =================================================================== */
+
+/* --- 1. No page may scroll sideways ---------------------------------
+   Several pages nest a horizontal carousel inside an auto-width flex
+   item, which silently stretches the whole document instead of
+   clipping it. The layout fixes below remove the real causes; this is
+   the backstop so one missed spot can never strand content off-screen. */
+html {
+    overflow-x: hidden;
+}
+
+body {
+    overflow-x: hidden;
+    max-width: 100%;
+}
+
+/* --- 2. hotel.php: stacked layout must take the screen width --------
+   .hotel-page-layout is align-items:flex-start, so once it stacks the
+   children size to their CONTENT instead of the container — and the
+   widest content is an un-clipped carousel. Stretching them puts the
+   overflow back inside the carousel's own scroller where it belongs. */
+@media (max-width: 900px) {
+    .hotel-page-layout {
+        align-items: stretch;
+        padding: 16px 14px 48px;
+        gap: 16px;
+    }
+
+    .hotel-page-content,
+    .hotel-filter-sidebar {
+        width: 100%;
+        min-width: 0;
+        max-width: 100%;
+    }
+
+    .hotel-page-content .popular-hotels .container {
+        min-width: 0;
+        max-width: 100%;
+    }
+}
+
+/* --- 3. Card carousels: swipe, do not tap tiny arrows ---------------
+   The arrow buttons need 58px of gutter on each side; on a 375px screen
+   that left a 259px track holding a 280px card, so every card was
+   clipped. Phones scroll these by swiping anyway, so drop the arrows,
+   reclaim the gutters, and snap each card into place. */
+@media (max-width: 768px) {
+    .hotel-list-wrapper {
+        padding: 0;
+    }
+
+    .scroll-btn {
+        display: none;
+    }
+
+    .hotel-list {
+        padding: 14px;
+        gap: 12px;
+        scroll-snap-type: x mandatory;
+        scroll-padding-left: 14px;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    /* Sized off the viewport so a slice of the next card always peeks in,
+       which is what tells people the row scrolls. */
+    .hotel-card {
+        width: min(290px, 78vw);
+        scroll-snap-align: start;
+    }
+
+    .popular-hotels {
+        padding: 24px 0;
+    }
+
+    .popular-hotels h2 {
+        font-size: 21px;
+        margin-bottom: 14px;
+    }
+}
+
+@media (max-width: 480px) {
+    .hotel-card {
+        width: min(280px, 80vw);
+    }
+}
+
+/* Results-grid cards are full-width blocks, not carousel items. */
+.hotel-filter-results-grid .hotel-card {
+    width: 100%;
+    scroll-snap-align: none;
+}
+
+/* --- 4. hotel.php filter panel: collapsed on phones -----------------
+   55 amenity checkboxes pushed the results a full screen-height down.
+   The handle is mobile-only; from 901px up the panel is always open. */
+.filter-toggle-btn {
+    display: none;
+}
+
+@media (max-width: 900px) {
+    .filter-toggle-btn {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        width: 100%;
+        padding: 13px 16px;
+        border: 1.5px solid #e5dcf5;
+        border-radius: 12px;
+        background: #fff;
+        color: #5d3f8c;
+        font-family: inherit;
+        font-size: 15px;
+        font-weight: 600;
+        cursor: pointer;
+    }
+
+    .filter-toggle-text {
+        flex: 1;
+        text-align: left;
+    }
+
+    .filter-toggle-count {
+        min-width: 22px;
+        padding: 2px 7px;
+        border-radius: 20px;
+        background: #7b59a9;
+        color: #fff;
+        font-size: 12px;
+        text-align: center;
+    }
+
+    .filter-toggle-chevron {
+        transition: transform .2s;
+    }
+
+    .hotel-filter-sidebar.filters-open .filter-toggle-chevron {
+        transform: rotate(180deg);
+    }
+
+    .hotel-filter-sidebar .filter-form {
+        display: none;
+        margin-top: 10px;
+    }
+
+    .hotel-filter-sidebar.filters-open .filter-form {
+        display: block;
+    }
+
+    /* The panel title just repeats the toggle we tapped to get here. */
+    .hotel-filter-sidebar .filter-form-title {
+        display: none;
+    }
+
+    /* Comfortable tap targets — the desktop rows are too thin for thumbs.
+       box-sizing matters here: without it min-height stacks on top of the
+       padding and every row becomes 66px, which is a lot of screen once the
+       rating filter adds six more of them. */
+    .filter-checkbox {
+        box-sizing: border-box;
+        padding: 11px 6px;
+        min-height: 44px;
+    }
+
+    .filter-submit-btn {
+        min-height: 46px;
+        position: sticky;
+        bottom: 8px;
+    }
+}
+
+/* "Show all criteria" toggle under the short amenity list */
+.filter-more-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    width: 100%;
+    margin-top: 8px;
+    padding: 9px;
+    border: 1px dashed #d9c9f0;
+    border-radius: 8px;
+    background: #faf7fe;
+    color: #7b59a9;
+    font-family: inherit;
+    font-size: 13px;
+    cursor: pointer;
+}
+
+.filter-more-btn:hover {
+    background: #f3ecfb;
+    border-color: #b79ee0;
+}
+
+.filter-more-btn .material-symbols-outlined {
+    font-size: 18px;
+    transition: transform .2s;
+}
+
+.filter-more-btn.is-expanded .material-symbols-outlined {
+    transform: rotate(180deg);
+}
+
+/* --- 5. Owner/admin dashboard headers -------------------------------
+   The action buttons live in a nowrap row; a third button pushed the
+   header wider than the screen. Give them their own full-width row. */
+.board-header-actions {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+@media (max-width: 768px) {
+    .board-header {
+        flex-wrap: wrap;
+    }
+
+    .board-header-actions {
+        width: 100%;
+        gap: 8px;
+    }
+
+    .board-header-actions .board-back-btn {
+        flex: 1 1 auto;
+        justify-content: center;
+        min-height: 42px;
+    }
+}
+
+/* --- 6. Hotel switcher: one scrollable row on phones ----------------
+   Wrapping four long hotel names stacked four rows tall before any
+   actual content; a swipeable row keeps the page compact. */
+@media (max-width: 700px) {
+    .hotel-switcher {
+        padding: 12px;
+    }
+
+    .hotel-switcher-tabs {
+        flex-wrap: nowrap;
+        overflow-x: auto;
+        padding-bottom: 6px;
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: none;
+    }
+
+    .hotel-switcher-tabs::-webkit-scrollbar {
+        display: none;
+    }
+
+    .hotel-switcher-tab {
+        flex: 0 0 auto;
+        min-height: 40px;
+        max-width: 62vw;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+}
+
+/* --- 7. Admin dashboard on phones ----------------------------------- */
+@media (max-width: 700px) {
+    .admin-search-row {
+        gap: 8px;
+    }
+
+    .admin-search-row .filter-text-input {
+        flex: 1 1 100%;
+        min-height: 44px;
+    }
+
+    .admin-search-row .btn-table-save {
+        flex: 1;
+        justify-content: center;
+        min-height: 44px;
+    }
+
+    .admin-detail-card {
+        padding: 16px;
+    }
+
+    .admin-detail-actions a {
+        flex: 1 1 100%;
+        justify-content: center;
+        min-height: 44px;
+    }
+
+    .admin-dashboard-header h1 {
+        font-size: 22px;
+    }
+
+    .admin-section-title {
+        font-size: 18px;
+    }
+}
+
+/* --- 8. Owner dashboard on phones ----------------------------------- */
+@media (max-width: 700px) {
+    .owner-arrival-list {
+        grid-template-columns: 1fr;
+    }
+
+    .owner-chart-card {
+        padding: 18px 12px 12px;
+    }
+
+    .owner-chip {
+        font-size: 12px;
+        padding: 6px 10px;
+    }
+
+    /* Inside the card-style responsive table the meter has no column to
+       stretch into, so pin a usable width. */
+    .owner-occupancy {
+        min-width: 140px;
+    }
+}
+
+/* --- 9. Universal touch-target floor --------------------------------
+   Anything tappable should clear ~44px so it can be hit reliably. */
+@media (max-width: 768px) {
+    .btn-details,
+    .auth-btn,
+    .btn-table-save,
+    .btn-table-view,
+    .btn-table-delete,
+    .btn-edit-room,
+    .btn-delete-room,
+    .board-back-btn {
+        min-height: 42px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .nav-links a,
+    .dropdown-menu a {
+        min-height: 44px;
+        display: flex;
+        align-items: center;
+    }
+}
+
+/* --- 10. Stop iOS Safari zooming on focus ---------------------------
+   Safari auto-zooms any input whose font-size is under 16px, and leaves
+   the page zoomed in after the keyboard closes. */
+@media (max-width: 768px) {
+    input[type="text"],
+    input[type="email"],
+    input[type="password"],
+    input[type="number"],
+    input[type="date"],
+    input[type="tel"],
+    input[type="search"],
+    select,
+    textarea {
+        font-size: 16px;
+    }
+}
+
+/* --- 5b. Header action buttons: one compact row, not a stack --------
+   .board-header > div carries flex:1 (basis 0), so a plain width:100%
+   on the action group is ignored and the buttons stack three rows tall.
+   Forcing the basis makes the group wrap onto its own full-width line,
+   after which the buttons can share it. "หน้าหลัก" is dropped on phones
+   because the hamburger menu already has a Home link. */
+@media (max-width: 768px) {
+    .board-header > .board-header-actions {
+        flex: 1 1 100%;
+        width: 100%;
+    }
+
+    .board-header > .board-header-actions .board-back-btn {
+        flex: 1 1 0;
+        min-width: 0;
+        /* content-box is the default here, so min-height would stack on top
+           of the padding and make a 58px-tall button. */
+        box-sizing: border-box;
+        min-height: 40px;
+        padding: 9px 8px;
+        font-size: 12px;
+        line-height: 1.2;
+        white-space: nowrap;
+        overflow: hidden;
+    }
+
+    .board-header-actions .board-back-btn .material-symbols-outlined {
+        font-size: 17px;
+    }
+
+    .board-header-actions .board-btn-home {
+        display: none;
+    }
+}
+
+/* ===================================================================
+   Reviews vs comments (hotel_detail.php)
+   A rated post is a review (one per person, never by the owner); an
+   unrated post is a comment. These styles keep the two visually apart
+   so the star average is obviously not counting the comments.
+   =================================================================== */
+.review-head-counts {
+    font-size: 13px;
+    font-weight: 400;
+    color: #8a7ba3;
+    margin-left: 6px;
+}
+
+.review-form-label {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 13px;
+    font-weight: 600;
+    color: #5d3f8c;
+    margin-bottom: 8px;
+}
+
+.review-form-label .material-symbols-outlined {
+    font-size: 17px;
+}
+
+.review-notice {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    padding: 12px 14px;
+    margin: 0 0 16px;
+    border-radius: 10px;
+    background: #f4f0fa;
+    border: 1px solid #e5dcf5;
+    color: #5d3f8c;
+    font-size: 13.5px;
+    line-height: 1.6;
+}
+
+.review-notice .material-symbols-outlined {
+    font-size: 19px;
+    flex-shrink: 0;
+    margin-top: 1px;
+}
+
+.review-comment-form {
+    border-top: 1px dashed #e5dcf5;
+    padding-top: 16px;
+    margin-top: 4px;
+}
+
+/* An unrated post gets a lighter treatment than a starred review. */
+.review-card-comment {
+    background: #fbf9fe;
+}
+
+.review-type-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 2px 9px;
+    border-radius: 20px;
+    background: #ede5f8;
+    color: #6b5b85;
+    font-size: 11.5px;
+}
+
+.review-type-tag .material-symbols-outlined {
+    font-size: 14px;
+}
+
+/* Marks posts written by the hotel's own owner, so an official reply is
+   obvious and an owner post is never mistaken for a guest review. */
+.review-owner-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    margin-left: 6px;
+    padding: 2px 8px;
+    border-radius: 20px;
+    background: #e7f6ec;
+    color: #1e7a3c;
+    font-size: 11px;
+    font-weight: 400;
+    vertical-align: middle;
+}
+
+.review-owner-badge .material-symbols-outlined {
+    font-size: 14px;
+}
+
+@media (max-width: 600px) {
+    .review-head-counts {
+        display: block;
+        margin: 4px 0 0;
+    }
+
+    .review-owner-badge {
+        font-size: 10px;
+        padding: 2px 6px;
+    }
+}
+
+/* Star average on a hotel card. Sits under the name so the score is
+   visible while browsing, not only after opening the hotel. */
+.hotel-card-rating {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 2px 0 6px;
+}
+
+.hotel-card-score {
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    padding: 2px 9px;
+    border-radius: 20px;
+    background: #ffd966;
+    color: #5a4300;
+    font-size: 13px;
+    font-weight: 600;
+}
+
+.hotel-card-score .material-symbols-outlined {
+    font-size: 15px;
+}
+
+.hotel-card-reviews {
+    font-size: 12px;
+    color: rgba(255, 255, 255, 0.75);
+}
+
+/* The filtered results grid renders cards on a light page background
+   instead of the purple carousel tile. */
+.hotel-filter-results-grid .hotel-card-reviews {
+    color: rgba(255, 255, 255, 0.75);
+}
+
+/* ===================================================================
+   "N stars and up" filter (hotel.php sidebar)
+   Reuses .filter-checkbox for spacing/tap-target so it lines up with the
+   amenity rows; only the radio and the star strip need extra styling.
+   =================================================================== */
+.filter-rating-row input[type="radio"] {
+    width: 16px;
+    height: 16px;
+    accent-color: #7b59a9;
+    flex-shrink: 0;
+    cursor: pointer;
+}
+
+.filter-rating-stars {
+    display: inline-flex;
+    font-size: 13px;
+    letter-spacing: -1px;
+    flex-shrink: 0;
+}
+
+.filter-rating-stars .star {
+    color: #ddd;
+    margin-right: 0;
+}
+
+.filter-rating-stars .star.star-filled {
+    color: #ffc107;
+}
+
+/* "5 ดาวขึ้นไป" etc. — the label sits between the stars and the count, so
+   it takes the leftover width the way the amenity labels do. */
+.filter-rating-row .filter-checkbox-label {
+    flex: 1;
+    font-size: 13px;
+    white-space: nowrap;
+}

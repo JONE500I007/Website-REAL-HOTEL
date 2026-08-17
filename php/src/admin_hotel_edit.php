@@ -1,6 +1,7 @@
 <?php
 session_start();
 require_once "config/database.php";
+require_once "includes/functions.php";
 
 if (!isset($_SESSION["user_id"]) || $_SESSION["role"] !== "admin") {
     header("Location: index.php");
@@ -14,16 +15,17 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
         $id          = (int) $_POST["id"];
         $hotel_name  = $_POST["hotel_name"];
         $location    = $_POST["location"];
+        $province    = in_array($_POST["province"] ?? '', thai_provinces(), true) ? $_POST["province"] : '';
         $price       = $_POST["price"];
         $description = $_POST["description"];
         $facilities  = $_POST["facilities"];
         $surrounding = $_POST["surrounding"];
 
         $stmt = $conn->prepare("
-            UPDATE hotels SET hotel_name=?, location=?, price=?, description=?, facilities=?, surrounding=?
+            UPDATE hotels SET hotel_name=?, location=?, province=?, price=?, description=?, facilities=?, surrounding=?
             WHERE id=?
         ");
-        $stmt->bind_param("ssssssi", $hotel_name, $location, $price, $description, $facilities, $surrounding, $id);
+        $stmt->bind_param("sssssssi", $hotel_name, $location, $province, $price, $description, $facilities, $surrounding, $id);
         $stmt->execute();
         $stmt->close();
         $msg = "อัปเดตข้อมูลโรงแรมเรียบร้อยแล้ว";
@@ -69,6 +71,7 @@ $result = $conn->query("SELECT * FROM hotels ORDER BY id ASC");
                     <th>ID</th>
                     <th>ชื่อโรงแรม</th>
                     <th>ที่ตั้ง</th>
+                    <th>จังหวัด</th>
                     <th>ราคา</th>
                     <th>รายละเอียด</th>
                     <th>สิ่งอำนวยความสะดวก</th>
@@ -83,6 +86,17 @@ $result = $conn->query("SELECT * FROM hotels ORDER BY id ASC");
                         <td data-label="ID"><?= $row["id"] ?></td>
                         <td data-label="ชื่อโรงแรม"><input type="text" name="hotel_name" value="<?= htmlspecialchars($row["hotel_name"]) ?>"></td>
                         <td data-label="ที่ตั้ง"><input type="text" name="location" value="<?= htmlspecialchars($row["location"]) ?>"></td>
+                        <td data-label="จังหวัด">
+                            <select name="province">
+                                <option value="">-- ไม่ระบุ --</option>
+                                <?php foreach (thai_provinces() as $provinceName): ?>
+                                    <option value="<?= htmlspecialchars($provinceName) ?>"
+                                        <?= ($row["province"] ?? '') === $provinceName ? 'selected' : '' ?>>
+                                        <?= htmlspecialchars($provinceName) ?>
+                                    </option>
+                                <?php endforeach; ?>
+                            </select>
+                        </td>
                         <td data-label="ราคา"><input type="text" name="price" value="<?= htmlspecialchars($row["price"]) ?>"></td>
                         <td data-label="รายละเอียด"><input type="text" name="description" value="<?= htmlspecialchars($row["description"]) ?>"></td>
                         <td data-label="สิ่งอำนวยความสะดวก"><input type="text" name="facilities" value="<?= htmlspecialchars($row["facilities"]) ?>"></td>

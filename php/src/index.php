@@ -75,7 +75,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
 <div class="hero-section">
     <div class="container">
-        <h1>ค้นหาโรงแรมในอำเภอเมืองจังหวัดปัตตานี</h1>
+        <h1>ค้นหาโรงแรมทั่วไทย</h1>
         <p>พบโรงแรมที่เหมาะสมกับคุณในพื้นที่ที่คุณต้องการ</p>
         <form class="search-form" action="hotel.php" method="get">
             <div class="search-segment search-segment-main">

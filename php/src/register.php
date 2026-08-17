@@ -81,7 +81,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
             <img src="image/hotel-icon-coupon-codes-hotel.png" alt="Logo">
         </a>
         <h1>ยินดีต้อนรับ<br>สู่ JustHottel</h1>
-        <p>สร้างบัญชีเพื่อค้นหาและจองโรงแรมที่ดีที่สุดในจังหวัดปัตตานี</p>
+        <p>สร้างบัญชีเพื่อค้นหาและจองโรงแรมที่ดีที่สุดทั่วไทย</p>
         <div class="auth-panel-badges">
             <span><span class="material-symbols-outlined">hotel</span> โรงแรมคัดสรร</span>
             <span><span class="material-symbols-outlined">star</span> รีวิวจริง</span>
